@@ -1,0 +1,16 @@
+{
+  "name": "family-office-funds-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "cookie-session": "^2.1.0",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
+    "googleapis": "^140.0.0"
+  }
+}

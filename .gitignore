@@ -1,0 +1,6 @@
+node_modules
+.env
+.env.local
+.claude/
+*-service-account*.json
+service-account*.json

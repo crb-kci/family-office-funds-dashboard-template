@@ -1,0 +1,10 @@
+node_modules
+.git
+.gitignore
+.dockerignore
+.env
+.env.local
+*-service-account*.json
+service-account*.json
+*.md
+.claude

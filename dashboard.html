@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fund Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: #F8F9FB;
+    --surface: #FFFFFF;
+    --surface-2: #F1F4F8;
+    --border: #E2E8F0;
+    --text: #0F172A;
+    --muted: #64748B;
+    --accent: #0369A1;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  header { padding: 24px 32px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  header h1 { margin: 0; font-size: 20px; }
+  header .user { font-size: 13px; color: var(--muted); }
+  main { padding: 24px 32px; max-width: 1400px; margin: 0 auto; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; }
+  .kpi-label { font-size: 11px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+  .kpi-value { font-size: 22px; font-weight: 600; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px 22px; margin-bottom: 20px; }
+  .card-title { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th { text-align: left; padding: 10px 12px; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); }
+  tbody td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  tbody tr:hover { background: var(--surface-2); }
+  .right { text-align: right; font-variant-numeric: tabular-nums; }
+  .error { color: #B91C1C; padding: 16px; background: #FEF2F2; border-radius: 8px; }
+  .loading { color: var(--muted); padding: 40px; text-align: center; }
+</style>
+</head>
+<body>
+  <header>
+    <h1 id="org-name">Fund Dashboard</h1>
+    <div class="user" id="user-info"></div>
+  </header>
+  <main>
+    <div id="content" class="loading">Loading…</div>
+  </main>
+<script>
+const fmt$ = (n) => n == null ? '—' : '$' + Math.round(n).toLocaleString();
+const fmtMult = (m) => m == null ? '—' : m.toFixed(2) + 'x';
+const fmtPct = (p) => p == null ? '—' : (p < 1 ? (p * 100).toFixed(1) : p.toFixed(1)) + '%';
+
+async function load() {
+  try {
+    const [me, cfg, data] = await Promise.all([
+      fetch('/api/me').then(r => r.json()),
+      fetch('/api/config').then(r => r.json()),
+      fetch('/api/data').then(r => r.json())
+    ]);
+    document.getElementById('org-name').textContent = cfg.orgName || 'Fund Dashboard';
+    document.getElementById('user-info').textContent = me.email || '';
+    if (data.error) {
+      document.getElementById('content').innerHTML = `<div class="error">Error loading data: ${data.error}</div>`;
+      return;
+    }
+    render(data);
+  } catch (err) {
+    document.getElementById('content').innerHTML = `<div class="error">Failed to load: ${err.message}</div>`;
+  }
+}
+
+function render(data) {
+  const funds = data.funds || [];
+  const totalCommitted = funds.reduce((s, f) => s + (f.commitment || 0), 0);
+  const totalCalled = funds.reduce((s, f) => s + (f.called || 0), 0);
+  const totalDistributed = funds.reduce((s, f) => s + (f.distributed || 0), 0);
+  const totalNav = funds.reduce((s, f) => s + (f.nav || 0), 0);
+  const portfolioTvpi = totalCalled > 0 ? (totalDistributed + totalNav) / totalCalled : null;
+  const portfolioDpi = totalCalled > 0 ? totalDistributed / totalCalled : null;
+
+  const sorted = [...funds].sort((a, b) => (b.totalValue || 0) - (a.totalValue || 0));
+  const rows = sorted.slice(0, 50).map(f => `
+    <tr>
+      <td>${escapeHtml(f.fundName)}</td>
+      <td>${escapeHtml(f.firm || '')}</td>
+      <td>${escapeHtml(f.entity || '')}</td>
+      <td class="right">${f.vintage || ''}</td>
+      <td class="right">${fmt$(f.commitment)}</td>
+      <td class="right">${fmt$(f.called)}</td>
+      <td class="right">${fmt$(f.distributed)}</td>
+      <td class="right">${fmt$(f.nav)}</td>
+      <td class="right">${fmtMult(f.tvpi)}</td>
+      <td class="right">${fmtMult(f.dpi)}</td>
+      <td class="right">${fmtPct(f.irr)}</td>
+    </tr>`).join('');
+
+  document.getElementById('content').innerHTML = `
+    <div class="kpis">
+      <div class="kpi"><div class="kpi-label">Funds</div><div class="kpi-value">${funds.length}</div></div>
+      <div class="kpi"><div class="kpi-label">Committed</div><div class="kpi-value">${fmt$(totalCommitted)}</div></div>
+      <div class="kpi"><div class="kpi-label">Called</div><div class="kpi-value">${fmt$(totalCalled)}</div></div>
+      <div class="kpi"><div class="kpi-label">Distributed</div><div class="kpi-value">${fmt$(totalDistributed)}</div></div>
+      <div class="kpi"><div class="kpi-label">NAV</div><div class="kpi-value">${fmt$(totalNav)}</div></div>
+      <div class="kpi"><div class="kpi-label">Portfolio TVPI</div><div class="kpi-value">${fmtMult(portfolioTvpi)}</div></div>
+      <div class="kpi"><div class="kpi-label">Portfolio DPI</div><div class="kpi-value">${fmtMult(portfolioDpi)}</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Funds (top 50 by total value)</div>
+      <table>
+        <thead><tr>
+          <th>Fund</th><th>Firm</th><th>Entity</th>
+          <th class="right">Vintage</th>
+          <th class="right">Committed</th><th class="right">Called</th>
+          <th class="right">Distributed</th><th class="right">NAV</th>
+          <th class="right">TVPI</th><th class="right">DPI</th><th class="right">IRR</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+load();
+</script>
+</body>
+</html>
