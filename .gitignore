@@ -4,3 +4,5 @@ node_modules
 .claude/
 *-service-account*.json
 service-account*.json
+
+.DS_Store

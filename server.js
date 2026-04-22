@@ -4,9 +4,16 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const { google } = require('googleapis');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
+
+// ── Demo mode ────────────────────────────────────────────
+// Set DEMO_MODE=true to run with a local JSON file of fake data and
+// no auth. Useful for evaluating the template without setting up
+// Google OAuth or a service account. Data comes from ./demo-data.json.
+const DEMO_MODE = process.env.DEMO_MODE === 'true';
 
 // ── Config (all via env) ─────────────────────────────────
 // ALLOWED_EMAILS: comma-separated email allowlist, OR
@@ -105,6 +112,22 @@ function headerIdx(headers, name) {
 
 // ── Fetch and process spreadsheet data ───────────────────
 async function fetchSheetData() {
+  if (DEMO_MODE) {
+    try {
+      const demo = JSON.parse(fs.readFileSync(path.join(__dirname, 'demo-data.json'), 'utf8'));
+      dataCache = {
+        funds: demo.funds || [],
+        txns: demo.txns || [],
+        firmByFund: demo.firmByFund || {},
+        lastFetch: Date.now(), loading: false, error: null
+      };
+      console.log(`DEMO MODE: loaded ${dataCache.funds.length} funds from demo-data.json`);
+    } catch (err) {
+      console.error('Failed to load demo-data.json:', err.message);
+      dataCache.error = err.message;
+    }
+    return;
+  }
   if (!SPREADSHEET_ID) return;
   if (dataCache.loading) return;
   dataCache.loading = true;
@@ -275,24 +298,26 @@ app.use(passport.session());
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((user, done) => done(null, user));
 
-passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: process.env.CALLBACK_URL || '/auth/google/callback'
-  },
-  (accessToken, refreshToken, profile, done) => {
-    const email = (profile.emails?.[0]?.value || '').toLowerCase();
-    if (!isAllowedEmail(email)) {
-      return done(null, false, { message: 'Unauthorized user' });
+if (!DEMO_MODE) {
+  passport.use(new GoogleStrategy({
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: process.env.CALLBACK_URL || '/auth/google/callback'
+    },
+    (accessToken, refreshToken, profile, done) => {
+      const email = (profile.emails?.[0]?.value || '').toLowerCase();
+      if (!isAllowedEmail(email)) {
+        return done(null, false, { message: 'Unauthorized user' });
+      }
+      return done(null, {
+        id: profile.id,
+        name: profile.displayName,
+        email,
+        photo: profile.photos?.[0]?.value
+      });
     }
-    return done(null, {
-      id: profile.id,
-      name: profile.displayName,
-      email,
-      photo: profile.photos?.[0]?.value
-    });
-  }
-));
+  ));
+}
 
 // ── Auth routes ──────────────────────────────────────────
 app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
@@ -312,6 +337,10 @@ app.get('/login-failed', (req, res) => {
 });
 
 function requireAuth(req, res, next) {
+  if (DEMO_MODE) {
+    req.user = { email: 'demo@example.com', name: 'Demo' };
+    return next();
+  }
   if (req.isAuthenticated()) return next();
   req.session.returnTo = req.originalUrl;
   res.redirect('/auth/google');
@@ -333,7 +362,7 @@ app.get('/login', (req, res) => {
 app.get('/api/me', requireAuth, (req, res) => res.json(req.user));
 
 app.get('/api/config', requireAuth, (req, res) => {
-  res.json({ orgName: ORG_NAME, orgTagline: ORG_TAGLINE });
+  res.json({ orgName: ORG_NAME, orgTagline: ORG_TAGLINE, demoMode: DEMO_MODE });
 });
 
 app.get('/api/data', requireAuth, async (req, res) => {

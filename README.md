@@ -18,10 +18,23 @@ This is a scaffold — you'll point it at your own sheet, plug in your own OAuth
 
 ## Quickstart
 
+### See it working in 30 seconds (demo mode)
+
+```bash
+npm install
+DEMO_MODE=true npm start
+```
+
+Open `http://localhost:8080`. No Google setup, no OAuth, no service account — just a working dashboard with 5 fake funds from `demo-data.json`. Good for a sanity check that the app runs before you wire up your own sheet.
+
+### Connect to your own sheet
+
 1. `cp .env.example .env` and fill in the values (see `DEPLOY.md` for how to get each one).
 2. `npm install`
 3. `npm start`
 4. Open `http://localhost:8080` — you'll be bounced to Google sign-in, and only email addresses in `ALLOWED_DOMAINS` / `ALLOWED_EMAILS` can get in.
+
+A live demo of this template is available at [family-office-funds-dashboard-demo](https://github.com/crb-kci/family-office-funds-dashboard-demo) (separate repo, full 46-fund dataset, publicly accessible).
 
 ## Data model
 
