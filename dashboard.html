@@ -1,132 +1,3533 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<title>Fund Dashboard</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-  :root {
-    --bg: #F8F9FB;
-    --surface: #FFFFFF;
-    --surface-2: #F1F4F8;
-    --border: #E2E8F0;
-    --text: #0F172A;
-    --muted: #64748B;
-    --accent: #0369A1;
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-  header { padding: 24px 32px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-  header h1 { margin: 0; font-size: 20px; }
-  header .user { font-size: 13px; color: var(--muted); }
-  main { padding: 24px 32px; max-width: 1400px; margin: 0 auto; }
-  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
-  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; }
-  .kpi-label { font-size: 11px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
-  .kpi-value { font-size: 22px; font-weight: 600; }
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px 22px; margin-bottom: 20px; }
-  .card-title { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  thead th { text-align: left; padding: 10px 12px; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); }
-  tbody td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
-  tbody tr:hover { background: var(--surface-2); }
-  .right { text-align: right; font-variant-numeric: tabular-nums; }
-  .error { color: #B91C1C; padding: 16px; background: #FEF2F2; border-radius: 8px; }
-  .loading { color: var(--muted); padding: 40px; text-align: center; }
-  .demo-banner { background: #FEF3C7; border-bottom: 1px solid #FCD34D; color: #78350F; padding: 10px 32px; font-size: 13px; text-align: center; }
-  .demo-banner strong { font-weight: 600; }
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Family Office Funds Dashboard — Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --ink:       #0F172A;
+      --ink-2:     #334155;
+      --muted:     #64748B;
+      --line:      #E2E8F0;
+      --bg:        #F8FAFC;
+      --card:      #FFFFFF;
+      --accent:    #0055AA;
+      --accent-2:  #0A7B83;
+      --pos:       #0A7B43;
+      --neg:       #B3261E;
+      --warn:      #B45309;
+      --highlight-bg:  #F0F9FF;
+      --highlight-bd:  #BAE6FD;
+      --row-hover:     #F8FAFC;
+      --row-line:      #F1F5F9;
+      --font-ui:    'IBM Plex Sans', system-ui, sans-serif;
+      --font-mono:  'IBM Plex Mono', monospace;
+      --font-serif: 'DM Serif Display', serif;
+      --radius-card: 10px;
+      --radius-btn:  6px;
+      /* Chart palette */
+      --chart-dist:     #0A7B43;
+      --chart-nav:      #0055AA;
+      --chart-called:   #94A3B8;
+      --chart-unfunded: #CBD5E1;
+      --chart-contrib:  #B3261E;
+      --chart-net:      #0F172A;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-ui);
+      color: var(--ink);
+      background: var(--bg);
+      font-size: 15px;
+      line-height: 1.45;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .mono { font-family: var(--font-mono); }
+    .serif { font-family: 'DM Serif Display', serif; font-style: italic; }
+
+    /* ── Header ────────────────────────────────── */
+    header {
+      background: var(--card);
+      border-bottom: 1px solid var(--line);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      flex-wrap: wrap;
+    }
+    header h1 {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-weight: 400;
+      font-size: 24px;
+      margin: 0;
+      line-height: 1.1;
+    }
+    .home-link {
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      transition: opacity 0.15s;
+    }
+    .home-link:hover { opacity: 0.7; text-decoration: none; }
+    header .sub {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 2px;
+      display: block;
+    }
+    .header-right {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      font-size: 13px;
+      color: var(--muted);
+      flex-wrap: wrap;
+    }
+    .header-right .mono { font-size: 12px; }
+
+    /* ── Nav tabs (pill group) ────────────────── */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--row-line);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 4px;
+    }
+    .tab {
+      padding: 7px 18px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: var(--font-mono);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      cursor: pointer;
+      border: 1px solid transparent;
+      background: transparent;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .tab:hover:not(.active) { color: var(--ink-2); }
+    .tab.active {
+      background: var(--card);
+      color: var(--ink);
+      border-color: var(--line);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+
+    /* User info chip */
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .user-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--pos);
+      color: #FFFFFF;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .user-chip a { color: var(--muted); text-decoration: none; }
+    .user-chip a:hover { color: var(--ink); text-decoration: underline; }
+
+    .entity-toggle {
+      display: flex;
+      gap: 2px;
+      background: var(--row-line);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 3px;
+    }
+    .entity-btn {
+      padding: 5px 12px;
+      border-radius: 5px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      color: var(--muted);
+      background: transparent;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .entity-btn:hover:not(.active) { color: var(--ink-2); }
+    .entity-btn.active {
+      color: var(--ink);
+      background: var(--card);
+      border-color: var(--line);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+
+    /* ── Main layout ──────────────────────────── */
+    main { padding: 24px 32px 64px; max-width: 1440px; margin: 0 auto; }
+
+    /* ── KPI cards ────────────────────────────── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .kpi {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 18px 20px;
+    }
+    .kpi .label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+    .kpi .value {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--ink);
+      line-height: 1.1;
+    }
+    .kpi .sub {
+      font-size: 13px;
+      color: var(--ink-2);
+      margin-top: 4px;
+    }
+    .kpi.highlight { background: var(--highlight-bg); border-color: var(--highlight-bd); }
+
+    /* ── Section cards ────────────────────────── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-bottom: 20px;
+    }
+    .card h2 {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 20px;
+      font-weight: 400;
+      margin: 0 0 14px;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    /* ── Tables ───────────────────────────────── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    th {
+      text-align: left;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--ink);
+      padding: 12px 8px;
+      border-bottom: 1px solid var(--line);
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+    /* Sticky column headers so they remain visible while scrolling long tables.
+       Offset by the page header's height so they sit just below it (the page
+       header is also sticky at top: 0 with higher z-index, and would otherwise
+       cover these). --header-h is set from JS on load/resize. */
+    thead th {
+      position: sticky;
+      top: var(--header-h, 0px);
+      background: var(--row-line);
+      z-index: 10;
+      box-shadow: 0 1px 0 var(--line);
+      padding-top: 14px;
+      padding-bottom: 14px;
+    }
+    th:hover { color: var(--ink); }
+    th.sorted::after { content: ' ▾'; color: var(--accent); }
+    th.sorted.asc::after { content: ' ▴'; color: var(--accent); }
+    td {
+      padding: 10px 8px;
+      border-bottom: 1px solid #F1F5F9;
+      vertical-align: middle;
+    }
+    tbody tr:hover td { background: #F8FAFC; }
+    tfoot td {
+      padding: 12px 8px;
+      font-weight: 700;
+      background: #F1F5F9;
+      border-top: 2px solid var(--accent);
+      border-bottom: none;
+    }
+    tfoot td.mono { font-family: var(--font-mono); font-size: 14px; }
+    tfoot .foot-label {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--ink-2);
+    }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    td.mono { font-family: var(--font-mono); font-size: 13px; }
+    .entity-pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 1px;
+      background: #EEF2FF;
+      color: #3730A3;
+    }
+    .entity-pill.BETA { background: #FEF3C7; color: #92400E; }
+    .entity-pill.ALPHA { background: #DBEAFE; color: #1E40AF; }
+    .pos { color: var(--pos); }
+    .neg { color: var(--neg); }
+    .muted { color: var(--muted); }
+    .info-wrap {
+      position: relative;
+      display: inline-block;
+      margin-left: 4px;
+    }
+    .info {
+      display: inline-block;
+      color: var(--muted);
+      cursor: help;
+      font-size: 12px;
+      opacity: 0.7;
+      transition: opacity 0.15s, color 0.15s;
+    }
+    .info-wrap:hover .info { opacity: 1; color: var(--ink-2); }
+    .info-tip {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--ink);
+      color: var(--bg);
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-family: var(--font-ui);
+      font-size: 13px;
+      font-weight: 400;
+      line-height: 1.55;
+      letter-spacing: 0;
+      text-transform: none;
+      width: 280px;
+      max-width: 90vw;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.12s ease-out;
+      z-index: 1000;
+      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.22);
+    }
+    .info-tip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: var(--ink);
+    }
+    .info-wrap:hover .info-tip { opacity: 1; }
+
+    /* ── Charts ───────────────────────────────── */
+    .chart-box { position: relative; height: 320px; }
+    .chart-box.tall { height: 420px; }
+
+    /* ── Panels ───────────────────────────────── */
+    .hidden { display: none !important; }
+
+    /* ── Loading / Error ──────────────────────── */
+    .loading, .error {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+    .error { color: var(--neg); }
+
+    /* ── Search ───────────────────────────────── */
+    .search {
+      display: inline-block;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-btn);
+      font-family: inherit;
+      font-size: 14px;
+      width: 260px;
+      background: var(--card);
+      color: var(--ink);
+    }
+    .search:focus { outline: none; border-color: var(--accent); }
+    .table-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 10px 16px;
+      margin-bottom: 12px;
+    }
+    .table-toolbar > h2 { flex: 0 0 100%; }
+    .toolbar-right {
+      flex: 1 1 100%;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .toolbar-right .row-count { margin-left: auto; }
+    .row-count {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* ── Filters ──────────────────────────────── */
+    .filter-select {
+      appearance: none;
+      background-color: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-btn);
+      padding: 8px 28px 8px 12px;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--ink);
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394A3B8' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      transition: border-color 0.15s, background-color 0.15s;
+    }
+    .filter-select:focus { outline: none; border-color: var(--accent); }
+
+    /* ── Multi-select ─────────────────────────── */
+    .multi-select { position: relative; display: inline-block; }
+    .ms-btn {
+      appearance: none;
+      background-color: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-btn);
+      padding: 8px 28px 8px 12px;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--ink);
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394A3B8' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      transition: border-color 0.15s, background-color 0.15s;
+      text-align: left;
+      max-width: 220px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    .ms-btn:focus { outline: none; border-color: var(--accent); }
+    .ms-btn.filter-active {
+      border-color: #D4A017;
+      background-color: #FEF9C3;
+      color: #1a1a1a;
+      font-weight: 600;
+    }
+    .ms-panel {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-card);
+      padding: 0;
+      min-width: 220px;
+      z-index: 500;
+      display: none;
+      flex-direction: column;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+      max-height: 360px;
+      overflow: hidden;
+    }
+    .ms-panel.open { display: flex; }
+    .ms-search {
+      padding: 8px;
+      border-bottom: 1px solid var(--line);
+    }
+    .ms-search input {
+      width: 100%;
+      padding: 6px 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-btn);
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--ink);
+      background: var(--card);
+    }
+    .ms-search input:focus { outline: none; border-color: var(--accent); }
+    .ms-options {
+      flex: 1;
+      overflow-y: auto;
+      padding: 4px;
+    }
+    .ms-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 10px;
+      cursor: pointer;
+      border-radius: calc(var(--radius-btn) - 2px);
+      font-size: 14px;
+      color: var(--ink);
+      user-select: none;
+    }
+    .ms-option:hover { background: var(--row-hover); }
+    .ms-option input[type="checkbox"] {
+      margin: 0;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+    .ms-option.none { color: var(--muted); font-style: italic; cursor: default; }
+    .ms-option.none:hover { background: transparent; }
+    .ms-footer {
+      padding: 6px 8px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .ms-footer button {
+      background: transparent;
+      border: none;
+      color: var(--accent);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      cursor: pointer;
+      padding: 4px 6px;
+    }
+    .ms-footer button:hover { text-decoration: underline; }
+
+    /* ── Global firm search (header) ──────────── */
+    .global-search { position: relative; }
+    .global-search input {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-btn);
+      padding: 7px 12px 7px 28px;
+      font-family: var(--font-ui);
+      font-size: 13px;
+      color: var(--ink);
+      width: 200px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .global-search input::placeholder { color: var(--muted); }
+    .global-search input:focus { border-color: var(--accent); }
+    .global-search .gs-icon {
+      position: absolute;
+      left: 9px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      color: var(--muted);
+      pointer-events: none;
+    }
+    .global-search .gs-drop {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-card);
+      max-height: 320px;
+      overflow-y: auto;
+      display: none;
+      z-index: 1100;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
+    }
+    .global-search .gs-drop.open { display: block; }
+    .gs-item {
+      padding: 9px 12px;
+      font-size: 13px;
+      color: var(--ink);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--row-line);
+    }
+    .gs-item:last-child { border-bottom: none; }
+    .gs-item:hover { background: var(--row-hover); }
+    .gs-item .gs-val {
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+    .gs-item.gs-empty { color: var(--muted); cursor: default; font-style: italic; }
+    .gs-item.gs-empty:hover { background: transparent; }
+
+    /* ── Firm detail modal ────────────────────── */
+    .firm-link {
+      color: var(--accent);
+      cursor: pointer;
+      text-decoration: none;
+      border-bottom: 1px dashed transparent;
+    }
+    .firm-link:hover { border-bottom-color: var(--accent); }
+    tr.clickable { cursor: pointer; }
+    tr.clickable:hover td { background: var(--row-hover); }
+    .fd-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 650;
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(6px);
+    }
+    .fd-overlay.open {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 40px 24px;
+      overflow-y: auto;
+    }
+    .fd-panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-card);
+      width: 100%;
+      max-width: 1100px;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(15,23,42,0.3);
+    }
+    .fd-header {
+      padding: 22px 28px 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .fd-header h2 {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 28px;
+      font-weight: 400;
+      color: var(--ink);
+      margin: 0 0 4px;
+    }
+    .fd-header .fd-meta {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .fd-close {
+      background: var(--row-line);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-btn);
+      color: var(--muted);
+      font-size: 15px;
+      cursor: pointer;
+      padding: 4px 10px;
+      line-height: 1;
+    }
+    .fd-close:hover { color: var(--ink); }
+    .fd-body { padding: 20px 28px 28px; }
+    .fd-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+    .fd-kpi {
+      background: var(--row-line);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+    .fd-kpi .label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+    .fd-kpi .value {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--ink);
+      line-height: 1.1;
+    }
+    #yr-kpis { grid-template-columns: repeat(4, 1fr); }
+    #yr-kpis .fd-kpi { padding: 16px 18px; }
+    #yr-kpis .fd-kpi.clickable { cursor: pointer; transition: border-color .12s, background-color .12s; }
+    #yr-kpis .fd-kpi.clickable:hover { border-color: var(--accent); background: var(--card); }
+    #yr-kpis .fd-kpi .label { font-size: 12px; letter-spacing: 1.5px; margin-bottom: 8px; }
+    #yr-kpis .fd-kpi .value { font-size: 26px; }
+    #yr-panel .fd-section-title {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 22px;
+      font-weight: 400;
+      letter-spacing: 0;
+      text-transform: none;
+      color: var(--ink);
+      margin: 24px 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--accent);
+    }
+    #yr-panel .fd-section-title:first-of-type { margin-top: 8px; }
+    .yr-entity-select {
+      appearance: none;
+      background-color: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-btn);
+      padding: 8px 28px 8px 12px;
+      font-family: var(--font-ui);
+      font-size: 14px;
+      color: var(--ink);
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394A3B8' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+    }
+    .yr-entity-select:focus { outline: none; border-color: var(--accent); }
+    .yr-entity-select.filter-active {
+      border-color: #D4A017;
+      background-color: #FEF9C3;
+      color: #1a1a1a;
+      font-weight: 600;
+    }
+    .fd-section-title {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 12px;
+    }
+    .fd-chart-wrap {
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px 16px;
+      height: 260px;
+      position: relative;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 900px) {
+      .fd-kpi-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    /* ── Feedback widget ──────────────────────── */
+    .fb-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 680;
+      background: var(--accent);
+      color: #FFFFFF;
+      border: none;
+      border-radius: var(--radius-card);
+      padding: 12px 20px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      transition: transform 0.15s, box-shadow 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .fb-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(0, 0, 0, 0.2); }
+    .fb-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 750;
+      background: transparent;
+      pointer-events: none;
+    }
+    .fb-overlay.open {
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+      padding: 24px;
+    }
+    .fb-panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-card);
+      width: 100%;
+      max-width: 420px;
+      overflow: hidden;
+      pointer-events: auto;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    }
+    .fb-header {
+      padding: 20px 24px 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+    .fb-header h2 {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      font-style: italic;
+      color: var(--ink);
+      margin: 0;
+    }
+    .fb-close {
+      background: var(--row-line);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-btn);
+      color: var(--muted);
+      font-size: 15px;
+      cursor: pointer;
+      padding: 4px 10px;
+      line-height: 1;
+    }
+    .fb-close:hover { color: var(--ink); }
+    .fb-body { padding: 16px 24px 20px; }
+    .fb-label {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .fb-page {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 14px;
+      background: var(--row-line);
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      padding: 5px 8px;
+      display: inline-block;
+    }
+    .fb-name, .fb-textarea {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-btn);
+      color: var(--ink);
+      font-family: var(--font-ui);
+      font-size: 14px;
+      padding: 8px 12px;
+      margin-bottom: 14px;
+      outline: none;
+      box-sizing: border-box;
+    }
+    .fb-textarea {
+      min-height: 120px;
+      resize: vertical;
+      line-height: 1.5;
+      padding: 10px 12px;
+    }
+    .fb-name:focus, .fb-textarea:focus { border-color: var(--accent); }
+    .fb-checks { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .fb-check {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--row-line);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-btn);
+      padding: 6px 10px;
+      cursor: pointer;
+      font-family: var(--font-ui);
+      font-size: 13px;
+      color: var(--ink);
+      user-select: none;
+    }
+    .fb-check input { margin: 0; cursor: pointer; accent-color: var(--accent); }
+    .fb-check.on { border-color: var(--accent); }
+    .fb-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .fb-cancel, .fb-submit {
+      border-radius: var(--radius-btn);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      padding: 8px 20px;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+    }
+    .fb-cancel {
+      background: var(--row-line);
+      border: 1px solid var(--line);
+      color: var(--muted);
+    }
+    .fb-cancel:hover { color: var(--ink); }
+    .fb-submit {
+      background: var(--accent);
+      border: 1px solid var(--accent);
+      color: #FFFFFF;
+    }
+    .fb-submit:hover { opacity: 0.9; }
+    .fb-submit.loading { opacity: 0.6; pointer-events: none; }
+    .fb-error {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--neg);
+      margin-top: 6px;
+      margin-bottom: 8px;
+      display: none;
+    }
+    .fb-success { text-align: center; padding: 32px 24px 28px; }
+    .fb-success-msg {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 20px;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+    .fb-success-sub {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+    .filter-select.filter-active,
+    .search.filter-active,
+    .entity-btn.filter-active {
+      border-color: #D4A017;
+      background-color: #FEF9C3;
+      color: #1a1a1a;
+      font-weight: 600;
+    }
+    .filter-banner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      margin-bottom: 14px;
+      background: #FEF9C3;
+      border: 1px solid #D4A017;
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: #92400E;
+      letter-spacing: 0.3px;
+    }
+    .filter-banner-icon { font-size: 15px; }
+    .filter-banner-desc { flex: 1; }
+    .filter-banner-clear {
+      background: #92400E;
+      border: none;
+      border-radius: 5px;
+      color: #FEF9C3;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      padding: 4px 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      letter-spacing: 0.3px;
+      transition: opacity 0.15s;
+    }
+    .filter-banner-clear:hover { opacity: 0.8; }
+
+    /* ── Theme picker ─────────────────────────── */
+    .theme-picker { position: relative; }
+    .theme-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-btn);
+      padding: 6px 10px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .theme-btn:hover { border-color: var(--ink-2); color: var(--ink); }
+    .theme-btn .chev { font-size: 9px; margin-left: 2px; }
+    .font-glyph {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 14px;
+      line-height: 1;
+      color: var(--ink);
+    }
+    .theme-dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-card);
+      padding: 4px;
+      min-width: 160px;
+      z-index: 1000;
+      display: none;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+    }
+    .theme-dropdown.open { display: block; }
+    .theme-option {
+      padding: 7px 10px;
+      border-radius: calc(var(--radius-btn) - 2px);
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.3px;
+      color: var(--ink);
+      border: 1.5px solid transparent;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .theme-option:hover { background: var(--row-hover); }
+    .theme-option.active { border-color: var(--accent); }
+    .theme-swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    @media (max-width: 900px) {
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
-  <div id="demo-banner" class="demo-banner" style="display:none"><strong>Demo data.</strong> All funds, managers, and figures on this page are fabricated — nothing here is real.</div>
-  <header>
-    <h1 id="org-name">Fund Dashboard</h1>
-    <div class="user" id="user-info"></div>
-  </header>
-  <main>
-    <div id="content" class="loading">Loading…</div>
-  </main>
-<script>
-const fmt$ = (n) => n == null ? '—' : '$' + Math.round(n).toLocaleString();
-const fmtMult = (m) => m == null ? '—' : m.toFixed(2) + 'x';
-const fmtPct = (p) => p == null ? '—' : (p < 1 ? (p * 100).toFixed(1) : p.toFixed(1)) + '%';
 
-async function load() {
-  try {
-    const [me, cfg, data] = await Promise.all([
-      fetch('/api/me').then(r => r.json()),
-      fetch('/api/config').then(r => r.json()),
-      fetch('/api/data').then(r => r.json())
-    ]);
-    document.getElementById('org-name').textContent = cfg.orgName || 'Fund Dashboard';
-    document.getElementById('user-info').textContent = me.email || '';
-    if (cfg.demoMode) document.getElementById('demo-banner').style.display = 'block';
-    if (data.error) {
-      document.getElementById('content').innerHTML = `<div class="error">Error loading data: ${data.error}</div>`;
-      return;
-    }
-    render(data);
-  } catch (err) {
-    document.getElementById('content').innerHTML = `<div class="error">Failed to load: ${err.message}</div>`;
+<!--
+  Demo banner. Hidden by default; revealed by JS when /api/config reports
+  demoMode=true (i.e. DEMO_MODE=true in the environment). Stays hidden in
+  any real deployment.
+-->
+<div id="demo-banner" style="display:none;background:#FEF3C7;border-bottom:1px solid #FCD34D;color:#78350F;padding:10px 32px;font-size:13px;line-height:1.55;text-align:center;font-family:system-ui,-apple-system,sans-serif;">
+  <strong style="font-weight:600">Demo mode.</strong> All data on this page is loaded from <code>demo-data.json</code> and is fabricated. Unset <code>DEMO_MODE</code> and point the app at a Google Sheet to connect your own data.
+</div>
+
+<header>
+  <a href="/portfolio" class="home-link" id="home-link">
+    <h1>Family Office Funds Dashboard</h1>
+    <span class="sub" id="header-stats">Demo — fabricated data</span>
+  </a>
+  <div class="header-right">
+    <div class="tabs">
+      <div class="tab active" data-view="portfolio">Portfolio</div>
+      <div class="tab" data-view="firms">Firms</div>
+      <div class="tab" data-view="vintages">Vintages</div>
+      <div class="tab" data-view="cashflows">Cash Flows</div>
+      <div class="tab" data-view="activity">Activity By Year</div>
+    </div>
+    <div class="global-search">
+      <span class="gs-icon">⌕</span>
+      <input type="text" id="gs-input" placeholder="Search firms" autocomplete="off">
+      <div class="gs-drop" id="gs-drop"></div>
+    </div>
+    <div class="theme-picker" id="font-picker">
+      <button type="button" class="theme-btn" id="font-btn" aria-haspopup="true" aria-expanded="false" title="Text size">
+        <span class="font-glyph">Aa</span>
+        <span id="font-label">100%</span>
+        <span class="chev">▾</span>
+      </button>
+      <div class="theme-dropdown" id="font-dropdown" role="menu"></div>
+    </div>
+    <div class="theme-picker" id="theme-picker">
+      <button type="button" class="theme-btn" id="theme-btn" aria-haspopup="true" aria-expanded="false">
+        <span class="theme-swatch" id="theme-btn-swatch"></span>
+        <span id="theme-label">High Contrast</span>
+        <span class="chev">▾</span>
+      </button>
+      <div class="theme-dropdown" id="theme-dropdown" role="menu"></div>
+    </div>
+    <div id="user-info"></div>
+  </div>
+</header>
+<style id="theme-extras"></style>
+
+<!-- Firm detail modal -->
+<div class="fd-overlay" id="fd-overlay">
+  <div class="fd-panel" id="fd-panel">
+    <div class="fd-header">
+      <div>
+        <h2 id="fd-name">Firm</h2>
+        <div class="fd-meta" id="fd-meta"></div>
+      </div>
+      <button class="fd-close" id="fd-close-btn" type="button" aria-label="Close">✕</button>
+    </div>
+    <div class="fd-body">
+      <div class="fd-kpi-grid" id="fd-kpis"></div>
+
+      <div class="fd-section-title">Annual Activity</div>
+      <div class="fd-chart-wrap"><canvas id="fd-chart"></canvas></div>
+
+      <div class="fd-section-title">Funds</div>
+      <table id="fd-funds-table" style="margin-bottom:12px">
+        <thead>
+          <tr>
+            <th class="num">Vintage</th>
+            <th>Fund</th>
+            <th>Entity</th>
+            <th class="num">Committed</th>
+            <th class="num">Called</th>
+            <th class="num">Distributed</th>
+            <th class="num">NAV</th>
+            <th class="num">TVPI</th>
+            <th class="num">DPI</th>
+            <th class="num">IRR</th>
+          </tr>
+        </thead>
+        <tbody id="fd-funds-body"></tbody>
+        <tfoot id="fd-funds-foot"></tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Year drill-down modal -->
+<div class="fd-overlay" id="yr-overlay">
+  <div class="fd-panel" id="yr-panel">
+    <div class="fd-header">
+      <div>
+        <h2 id="yr-name">Year</h2>
+        <select class="yr-entity-select" id="yr-entity-select" style="margin-top:6px;">
+          <option value="all">Alpha + Beta</option>
+          <option value="ALPHA">Alpha</option>
+          <option value="BETA">Beta</option>
+        </select>
+      </div>
+      <button class="fd-close" id="yr-close-btn" type="button" aria-label="Close">✕</button>
+    </div>
+    <div class="fd-body">
+      <div class="fd-kpi-grid" id="yr-kpis"></div>
+
+      <div class="fd-section-title" id="yr-commit-title" style="margin-top:18px; scroll-margin-top:16px">Commitments</div>
+      <table id="yr-commit-table" style="margin-bottom:18px">
+        <thead>
+          <tr>
+            <th data-sort="fundName">Fund</th>
+            <th data-sort="firm">Firm</th>
+            <th data-sort="entity">Entity</th>
+            <th class="num" data-sort="commitment">Commitment</th>
+          </tr>
+        </thead>
+        <tbody id="yr-commit-body"></tbody>
+        <tfoot id="yr-commit-foot"></tfoot>
+      </table>
+
+      <div class="fd-section-title" id="yr-dist-title" style="scroll-margin-top:16px">Distributions</div>
+      <table id="yr-dist-table" style="margin-bottom:18px">
+        <thead>
+          <tr>
+            <th data-sort="fundName">Fund</th>
+            <th data-sort="entity">Entity</th>
+            <th class="num" data-sort="count"># Txns</th>
+            <th class="num" data-sort="amount">Amount</th>
+          </tr>
+        </thead>
+        <tbody id="yr-dist-body"></tbody>
+        <tfoot id="yr-dist-foot"></tfoot>
+      </table>
+
+      <div class="fd-section-title" id="yr-calls-title" style="scroll-margin-top:16px">Capital Calls</div>
+      <table id="yr-calls-table">
+        <thead>
+          <tr>
+            <th data-sort="fundName">Fund</th>
+            <th data-sort="entity">Entity</th>
+            <th class="num" data-sort="count"># Txns</th>
+            <th class="num" data-sort="amount">Amount</th>
+          </tr>
+        </thead>
+        <tbody id="yr-calls-body"></tbody>
+        <tfoot id="yr-calls-foot"></tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Feedback widget -->
+<button class="fb-btn" id="fb-open-btn" type="button">💬 Feedback</button>
+<div class="fb-overlay" id="fb-overlay">
+  <div class="fb-panel" id="fb-panel">
+    <div class="fb-header">
+      <h2 id="fb-title">Send Feedback</h2>
+      <button class="fb-close" id="fb-close-btn" type="button" aria-label="Close">✕</button>
+    </div>
+    <div class="fb-body" id="fb-body">
+      <div class="fb-page" id="fb-page-tag">Page: —</div>
+      <label class="fb-label">Your first name <span style="color:var(--neg)">*</span></label>
+      <input class="fb-name" id="fb-name" type="text" placeholder="Your name" required>
+      <label class="fb-label">Type (optional, select any)</label>
+      <div class="fb-checks" id="fb-types">
+        <label class="fb-check"><input type="checkbox" value="Bad Data"> Bad Data</label>
+        <label class="fb-check"><input type="checkbox" value="Feature Request"> Feature Request</label>
+        <label class="fb-check"><input type="checkbox" value="Bug"> Bug</label>
+        <label class="fb-check"><input type="checkbox" value="Other"> Other</label>
+      </div>
+      <label class="fb-label">Comment <span style="color:var(--neg)">*</span></label>
+      <textarea class="fb-textarea" id="fb-text" placeholder="What's on your mind?" required></textarea>
+      <div class="fb-error" id="fb-error"></div>
+      <div class="fb-actions">
+        <button class="fb-cancel" id="fb-cancel-btn" type="button">Cancel</button>
+        <button class="fb-submit" id="fb-submit-btn" type="button">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main>
+
+  <div id="loading" class="loading">Loading fund data…</div>
+  <div id="error" class="error hidden"></div>
+
+  <div id="content" class="hidden">
+
+    <!-- Filter controls live inside each table card; showView() relocates this element into the active view. -->
+    <div class="global-filters" id="global-filters" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+      <select class="filter-select" id="entity-select">
+        <option value="all">Alpha + Beta</option>
+        <option value="ALPHA">Alpha</option>
+        <option value="BETA">Beta</option>
+      </select>
+      <div class="multi-select" id="ms-vintage">
+        <button type="button" class="ms-btn" id="ms-vintage-btn">
+          <span id="ms-vintage-label">All Vintages</span>
+        </button>
+        <div class="ms-panel" id="ms-vintage-panel">
+          <div class="ms-options" id="ms-vintage-options"></div>
+          <div class="ms-footer">
+            <span id="ms-vintage-count"></span>
+            <button type="button" id="ms-vintage-clear">Clear</button>
+          </div>
+        </div>
+      </div>
+      <div class="multi-select" id="ms-fund">
+        <button type="button" class="ms-btn" id="ms-fund-btn">
+          <span id="ms-fund-label">All Funds</span>
+        </button>
+        <div class="ms-panel" id="ms-fund-panel">
+          <div class="ms-search"><input type="text" id="ms-fund-search" placeholder="Search funds…"></div>
+          <div class="ms-options" id="ms-fund-options"></div>
+          <div class="ms-footer">
+            <span id="ms-fund-count"></span>
+            <button type="button" id="ms-fund-clear">Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="filter-banner" id="filter-banner" style="display:none">
+      <span class="filter-banner-icon">⚠</span>
+      <span class="filter-banner-desc" id="filter-banner-desc"></span>
+      <button class="filter-banner-clear" onclick="clearAllFilters()">✕ Clear All Filters</button>
+    </div>
+
+    <!-- KPI STRIP -->
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="label">Committed</div>
+        <div class="value" id="kpi-committed">—</div>
+        <div class="sub" id="kpi-fund-count">—</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Called <span class="info-wrap"><span class="info">&#9432;</span><span class="info-tip">% funded above 100% reflects recycled distributions. Some pre-2005 funds also charged management fees outside commitment.</span></span></div>
+        <div class="value" id="kpi-called">—</div>
+        <div class="sub" id="kpi-pct-funded">—</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Distributed</div>
+        <div class="value pos" id="kpi-distributed">—</div>
+        <div class="sub" id="kpi-dpi">—</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Current NAV</div>
+        <div class="value" id="kpi-nav">—</div>
+        <div class="sub" id="kpi-nav-pct">—</div>
+      </div>
+      <div class="kpi highlight">
+        <div class="label">Total Value (Dist + NAV)</div>
+        <div class="value" id="kpi-total-value">—</div>
+        <div class="sub" id="kpi-tvpi">—</div>
+      </div>
+    </div>
+
+    <!-- PORTFOLIO VIEW -->
+    <section id="view-portfolio">
+      <div class="card">
+        <div class="table-toolbar">
+          <h2 style="margin:0">Fund Portfolio</h2>
+          <div class="toolbar-right">
+            <span class="row-count" id="portfolio-count">—</span>
+          </div>
+        </div>
+        <div>
+          <table id="portfolio-table">
+            <thead>
+              <tr>
+                <th data-sort="vintage" class="num">Vintage</th>
+                <th data-sort="fundName">Fund</th>
+                <th data-sort="firm">Firm</th>
+                <th data-sort="entity">Entity</th>
+                <th data-sort="commitment" class="num">Committed</th>
+                <th data-sort="called" class="num">Called</th>
+                <th data-sort="distributed" class="num">Distributed</th>
+                <th data-sort="nav" class="num">NAV</th>
+                <th data-sort="tvpi" class="num">TVPI</th>
+                <th data-sort="dpi" class="num">DPI</th>
+                <th data-sort="irr" class="num">IRR</th>
+              </tr>
+            </thead>
+            <tbody id="portfolio-body"></tbody>
+            <tfoot id="portfolio-foot"></tfoot>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- FIRMS VIEW -->
+    <section id="view-firms" class="hidden">
+      <div class="card">
+        <div class="table-toolbar">
+          <h2 style="margin:0">Firms <span class="info-wrap"><span class="info">&#9432;</span><span class="info-tip">Roll-up of every fund commitment grouped by GP firm. TVPI/DPI are called-weighted across all of the firm's funds. IRR is called-weighted (approximation — for true pooled IRR see per-fund rows in the firm detail).</span></span></h2>
+          <div class="toolbar-right">
+            <span class="row-count" id="firms-count">—</span>
+          </div>
+        </div>
+        <table id="firms-table">
+          <thead>
+            <tr>
+              <th data-sort="firm">Firm</th>
+              <th class="num" data-sort="fundCount"># Funds</th>
+              <th class="num" data-sort="firstVintage">First Vintage</th>
+              <th class="num" data-sort="lastVintage">Last Vintage</th>
+              <th class="num" data-sort="commitment">Committed</th>
+              <th class="num" data-sort="called">Called</th>
+              <th class="num" data-sort="distributed">Distributed</th>
+              <th class="num" data-sort="nav">NAV</th>
+              <th class="num" data-sort="tvpi">TVPI</th>
+              <th class="num" data-sort="dpi">DPI</th>
+              <th class="num" data-sort="irr">IRR</th>
+            </tr>
+          </thead>
+          <tbody id="firms-body"></tbody>
+          <tfoot id="firms-foot"></tfoot>
+        </table>
+      </div>
+    </section>
+
+    <!-- VINTAGES VIEW -->
+    <section id="view-vintages" class="hidden">
+      <div class="card">
+        <h2>Exposure by Vintage Year</h2>
+        <div class="chart-box tall"><canvas id="chart-vintage"></canvas></div>
+        <div class="muted" style="font-size:11px; margin-top:10px;">* TBD = vintage year not yet recorded for these funds; actual vintages need to be confirmed.</div>
+      </div>
+      <div class="card">
+        <div class="table-toolbar">
+          <h2 style="margin:0">Performance by Vintage <span class="info-wrap"><span class="info">&#9432;</span><span class="info-tip">Cohort view: each row groups funds by the year they were raised. Committed / Called / Distributed / NAV are the <b>cumulative lifetime</b> totals of those funds through today — not dollars transacted in that calendar year. For annual data, see the Cash Flows and Activity By Year tabs.</span></span></h2>
+          <div class="toolbar-right">
+            <span class="row-count" id="vintage-count">—</span>
+          </div>
+        </div>
+        <table id="vintage-table">
+          <thead>
+            <tr>
+              <th class="num" data-sort="vintage">Vintage</th>
+              <th class="num" data-sort="count">Funds</th>
+              <th class="num" data-sort="commitment">Committed</th>
+              <th class="num" data-sort="called">Called</th>
+              <th class="num" data-sort="distributed">Distributed</th>
+              <th class="num" data-sort="nav">NAV</th>
+              <th class="num" data-sort="tvpi">TVPI</th>
+              <th class="num" data-sort="dpi">DPI</th>
+            </tr>
+          </thead>
+          <tbody id="vintage-body"></tbody>
+          <tfoot id="vintage-foot"></tfoot>
+        </table>
+      </div>
+    </section>
+
+    <!-- CASHFLOWS VIEW -->
+    <section id="view-cashflows" class="hidden">
+      <div class="card">
+        <div class="table-toolbar">
+          <h2 style="margin:0">Cumulative Cash Flow</h2>
+          <div class="toolbar-right"></div>
+        </div>
+        <div class="chart-box tall"><canvas id="chart-cashflow"></canvas></div>
+      </div>
+    </section>
+
+    <!-- ACTIVITY BY YEAR VIEW -->
+    <section id="view-activity" class="hidden">
+      <div class="card">
+        <h2>Activity by Year <span class="info-wrap"><span class="info">&#9432;</span><span class="info-tip">Calendar-year view: each bar/row shows activity that happened <b>in that year</b> across the entire portfolio — new commitments signed, capital calls paid, and distributions received. <b>Not</b> a cohort/vintage view. For lifetime performance of a vintage cohort, see the Vintages tab.</span></span></h2>
+        <div class="chart-box tall"><canvas id="chart-annual"></canvas></div>
+        <div class="muted" style="font-size:11px; margin-top:10px;">* TBD = commitments on funds whose vintage year is not yet recorded. Capital calls and distributions are always bucketed by their actual transaction year.</div>
+      </div>
+      <div class="card">
+        <div class="table-toolbar">
+          <h2 style="margin:0">Annual Activity Detail</h2>
+          <div class="toolbar-right">
+            <span class="row-count" id="annual-count">—</span>
+          </div>
+        </div>
+        <table id="annual-table">
+          <thead>
+            <tr>
+              <th class="num" data-sort="year">Year</th>
+              <th class="num" data-sort="funds"># Funds Committed</th>
+              <th class="num" data-sort="commitment">Commitment</th>
+              <th class="num" data-sort="calls">Capital Calls</th>
+              <th class="num" data-sort="distributions">Distributions</th>
+            </tr>
+          </thead>
+          <tbody id="annual-body"></tbody>
+          <tfoot id="annual-foot"></tfoot>
+        </table>
+      </div>
+    </section>
+
+  </div>
+
+</main>
+
+<script>
+// ───────────────────────────────────────────────────────────
+// State
+// ───────────────────────────────────────────────────────────
+let state = {
+  data: null,
+  entity: 'all',
+  view: 'portfolio',
+  sort: { col: 'commitment', asc: false },
+  annualSort: { col: 'year', asc: false },
+  annualSearch: '',
+  vintageSort: { col: 'vintage', asc: true },
+  vintageSearch: '',
+  firmSort: { col: 'commitment', asc: false },
+  firmSearch: '',
+  yrCommitSort: { col: 'fundName', asc: true },
+  yrDistSort: { col: 'fundName', asc: true },
+  yrCallsSort: { col: 'fundName', asc: true },
+  search: '',
+  vintages: [],   // array of selected vintages (numbers or 'TBD')
+  funds: [],      // array of selected fund names
+  annualYears: [], // Activity view only: selected calendar years (numbers or 'TBD')
+  theme: 'readable',
+  fontScale: '100',
+};
+
+// search text inside the Fund multi-select popover (not a filter, just narrows the option list)
+let msFundSearchText = '';
+
+// ───────────────────────────────────────────────────────────
+// Themes
+// ───────────────────────────────────────────────────────────
+const THEMES = {
+  readable: {
+    label: 'High Contrast',
+    swatch: '#0055AA',
+    vars: {
+      '--bg':'#F8FAFC','--card':'#FFFFFF',
+      '--ink':'#0F172A','--ink-2':'#334155','--muted':'#64748B','--line':'#E2E8F0',
+      '--accent':'#0055AA','--accent-2':'#0A7B83',
+      '--pos':'#0A7B43','--neg':'#B3261E','--warn':'#B45309',
+      '--highlight-bg':'#F0F9FF','--highlight-bd':'#BAE6FD',
+      '--row-hover':'#F8FAFC','--row-line':'#F1F5F9',
+      '--font-ui':"'IBM Plex Sans', system-ui, sans-serif",
+      '--font-mono':"'IBM Plex Mono', monospace",
+      '--font-serif':"'DM Serif Display', serif",
+      '--radius-card':'10px','--radius-btn':'6px',
+      '--chart-dist':'#0A7B43','--chart-nav':'#0055AA',
+      '--chart-called':'#94A3B8','--chart-unfunded':'#CBD5E1',
+      '--chart-contrib':'#B3261E','--chart-net':'#0F172A',
+    },
+  },
+  light: {
+    label: 'Clean Light',
+    swatch: '#0369A1',
+    vars: {
+      '--bg':'#F2EFE9','--card':'#FFFFFF',
+      '--ink':'#0F172A','--ink-2':'#334155','--muted':'#94A3B8','--line':'#DDD8CF',
+      '--accent':'#0369A1','--accent-2':'#0284C7',
+      '--pos':'#059669','--neg':'#DC2626','--warn':'#D97706',
+      '--highlight-bg':'#F5F2EC','--highlight-bd':'#C8C2B8',
+      '--row-hover':'#F5F2EC','--row-line':'#EDE9E3',
+      '--font-ui':"'IBM Plex Sans', system-ui, sans-serif",
+      '--font-mono':"'IBM Plex Mono', monospace",
+      '--font-serif':"'DM Serif Display', serif",
+      '--radius-card':'10px','--radius-btn':'6px',
+      '--chart-dist':'#059669','--chart-nav':'#0369A1',
+      '--chart-called':'#64748B','--chart-unfunded':'#DDD8CF',
+      '--chart-contrib':'#DC2626','--chart-net':'#0F172A',
+    },
+  },
+  violet: {
+    label: 'Violet',
+    swatch: '#7B3FE4',
+    vars: {
+      '--bg':'#F0E6FF','--card':'#FFFFFF',
+      '--ink':'#2D1260','--ink-2':'#5B2FA0','--muted':'#8B5CC8','--line':'#C9AAFF',
+      '--accent':'#7B3FE4','--accent-2':'#6D28D9',
+      '--pos':'#0D9488','--neg':'#DB2777','--warn':'#A855F7',
+      '--highlight-bg':'#E8D5FF','--highlight-bd':'#B08FE8',
+      '--row-hover':'#F5ECFF','--row-line':'#E8D5FF',
+      '--font-ui':"'IBM Plex Sans', system-ui, sans-serif",
+      '--font-mono':"'IBM Plex Mono', monospace",
+      '--font-serif':"'DM Serif Display', serif",
+      '--radius-card':'10px','--radius-btn':'6px',
+      '--chart-dist':'#0D9488','--chart-nav':'#7B3FE4',
+      '--chart-called':'#9B59E0','--chart-unfunded':'#D4BFFF',
+      '--chart-contrib':'#DB2777','--chart-net':'#2D1260',
+    },
+  },
+};
+
+function applyTheme(key, { save = true } = {}) {
+  const theme = THEMES[key] || THEMES.readable;
+  const root = document.documentElement;
+  for (const [k, v] of Object.entries(theme.vars)) {
+    root.style.setProperty(k, v);
+  }
+  document.getElementById('theme-extras').textContent = theme.extraCss || '';
+  document.getElementById('theme-label').textContent = theme.label;
+  document.getElementById('theme-btn-swatch').style.background = theme.swatch;
+  document.querySelectorAll('.theme-option').forEach((o) => {
+    o.classList.toggle('active', o.dataset.theme === key);
+  });
+  state.theme = key;
+  if (save) {
+    try { localStorage.setItem('ff-demo-theme', key); } catch (e) {}
+  }
+  // Re-render charts so they pick up new colors
+  if (state.data) {
+    if (state.view === 'vintages') renderVintages();
+    if (state.view === 'cashflows') renderCashflows();
+    if (state.view === 'activity') renderAnnual();
   }
 }
 
-function render(data) {
-  const funds = data.funds || [];
-  const totalCommitted = funds.reduce((s, f) => s + (f.commitment || 0), 0);
-  const totalCalled = funds.reduce((s, f) => s + (f.called || 0), 0);
-  const totalDistributed = funds.reduce((s, f) => s + (f.distributed || 0), 0);
-  const totalNav = funds.reduce((s, f) => s + (f.nav || 0), 0);
-  const portfolioTvpi = totalCalled > 0 ? (totalDistributed + totalNav) / totalCalled : null;
-  const portfolioDpi = totalCalled > 0 ? totalDistributed / totalCalled : null;
+function cssVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
 
-  const sorted = [...funds].sort((a, b) => (b.totalValue || 0) - (a.totalValue || 0));
-  const rows = sorted.slice(0, 50).map(f => `
+function hexToRgba(hex, alpha) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex);
+  if (!m) return hex;
+  const n = parseInt(m[1], 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+}
+
+// ───────────────────────────────────────────────────────────
+// Font scale
+// ───────────────────────────────────────────────────────────
+const FONT_SCALES = [
+  { key: '100', label: '100%', value: 1 },
+  { key: '110', label: '110%', value: 1.1 },
+  { key: '125', label: '125%', value: 1.25 },
+  { key: '150', label: '150%', value: 1.5 },
+];
+
+function applyFontScale(key, { save = true } = {}) {
+  const entry = FONT_SCALES.find((s) => s.key === key) || FONT_SCALES[0];
+  // CSS `zoom` scales the entire layout proportionally (text + spacing),
+  // which avoids the overflow problems of scaling font-size alone.
+  document.body.style.zoom = String(entry.value);
+  document.getElementById('font-label').textContent = entry.label;
+  document.querySelectorAll('#font-dropdown .theme-option').forEach((o) => {
+    o.classList.toggle('active', o.dataset.scale === entry.key);
+  });
+  state.fontScale = entry.key;
+  if (save) {
+    try { localStorage.setItem('ff-demo-font-scale', entry.key); } catch (e) {}
+  }
+}
+
+function populateFontPicker() {
+  const dd = document.getElementById('font-dropdown');
+  dd.innerHTML = FONT_SCALES.map(
+    (s) => `
+    <div class="theme-option" data-scale="${s.key}" role="menuitem">
+      <span class="font-glyph" style="width:14px; display:inline-block; text-align:center;">Aa</span>
+      <span>${s.label}</span>
+    </div>`
+  ).join('');
+  dd.querySelectorAll('.theme-option').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      applyFontScale(el.dataset.scale);
+      dd.classList.remove('open');
+      document.getElementById('font-btn').setAttribute('aria-expanded', 'false');
+    });
+  });
+}
+
+function populateThemePicker() {
+  const dd = document.getElementById('theme-dropdown');
+  dd.innerHTML = Object.entries(THEMES)
+    .map(
+      ([key, t]) => `
+      <div class="theme-option" data-theme="${key}" role="menuitem">
+        <span class="theme-swatch" style="background:${t.swatch}"></span>
+        <span>${t.label}</span>
+      </div>`
+    )
+    .join('');
+  dd.querySelectorAll('.theme-option').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      applyTheme(el.dataset.theme);
+      dd.classList.remove('open');
+      document.getElementById('theme-btn').setAttribute('aria-expanded', 'false');
+    });
+  });
+}
+
+const charts = {};
+
+// ───────────────────────────────────────────────────────────
+// Formatters
+// ───────────────────────────────────────────────────────────
+function fmtMoney(n, compact = false) {
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  const abs = Math.abs(n);
+  const sign = n < 0 ? '-' : '';
+  if (compact) {
+    if (abs >= 1e9) return sign + '$' + (abs / 1e9).toFixed(1) + 'b';
+    if (abs >= 1e6) return sign + '$' + (abs / 1e6).toFixed(1) + 'm';
+    if (abs >= 500) return sign + '$' + Math.round(abs / 1e3).toLocaleString() + 'k';
+    return sign + '$' + Math.round(abs).toLocaleString();
+  }
+  return (n < 0 ? '-$' : '$') + abs.toLocaleString('en-US', { maximumFractionDigits: 0 });
+}
+function fmtMult(n) {
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  return n.toFixed(1) + 'x';
+}
+function fmtPct(n) {
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  return (n * 100).toFixed(1) + '%';
+}
+function fmtInt(n) {
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  return Math.round(n).toLocaleString();
+}
+
+// ───────────────────────────────────────────────────────────
+// Data helpers
+// ───────────────────────────────────────────────────────────
+function filteredFunds() {
+  if (!state.data) return [];
+  let f = state.data.funds;
+  if (state.entity !== 'all') f = f.filter((x) => x.entity === state.entity);
+  // Vintage filter only applies on non-activity views (Activity uses annualYears on output rows instead).
+  if (state.view !== 'activity' && state.vintages.length) {
+    const set = new Set(state.vintages.map(String));
+    f = f.filter((x) => set.has(x.vintage ? String(x.vintage) : 'TBD'));
+  }
+  if (state.funds.length) {
+    const set = new Set(state.funds);
+    f = f.filter((x) => set.has(x.fundName));
+  }
+  if (state.search) {
+    const q = state.search.toLowerCase();
+    f = f.filter((x) => x.fundName.toLowerCase().includes(q));
+  }
+  return f;
+}
+
+function entityFilteredCount() {
+  // Count after entity filter only — used for "X of Y" in banner
+  if (!state.data) return 0;
+  let f = state.data.funds;
+  if (state.entity !== 'all') f = f.filter((x) => x.entity === state.entity);
+  return f.length;
+}
+
+function anyFilterActive() {
+  return !!(state.search || state.vintage || state.fund || state.entity !== 'all');
+}
+
+function msSummaryLabel(noun, values) {
+  if (values.length === 0) return 'All ' + noun;
+  if (values.length === 1) return String(values[0]);
+  if (values.length === 2) return values.map(String).join(', ');
+  return `${values.length} ${noun.toLowerCase()} selected`;
+}
+
+function updateFilterUI() {
+  const isActivity = state.view === 'activity';
+  const activeYearValues = isActivity ? state.annualYears : state.vintages;
+  const yearNoun = isActivity ? 'Years' : 'Vintages';
+
+  const vintBtn = document.getElementById('ms-vintage-btn');
+  const fundBtn = document.getElementById('ms-fund-btn');
+  vintBtn.classList.toggle('filter-active', activeYearValues.length > 0);
+  fundBtn.classList.toggle('filter-active', state.funds.length > 0);
+
+  document.getElementById('ms-vintage-label').textContent =
+    msSummaryLabel(yearNoun, activeYearValues);
+  document.getElementById('ms-fund-label').textContent =
+    msSummaryLabel('Funds', state.funds);
+
+  const entitySel = document.getElementById('entity-select');
+  if (entitySel) {
+    entitySel.value = state.entity;
+    entitySel.classList.toggle('filter-active', state.entity !== 'all');
+  }
+
+  const parts = [];
+  if (state.entity !== 'all') parts.push('Entity: ' + state.entity);
+  if (activeYearValues.length) {
+    parts.push((isActivity ? 'Year' : 'Vintage') + ': ' + msSummaryLabel(yearNoun, activeYearValues));
+  }
+  if (state.funds.length) parts.push('Fund: ' + msSummaryLabel('Funds', state.funds));
+  if (state.search) parts.push('"' + state.search + '"');
+
+  const banner = document.getElementById('filter-banner');
+  const desc = document.getElementById('filter-banner-desc');
+  if (parts.length) {
+    banner.style.display = 'flex';
+    if (isActivity) {
+      desc.textContent = `Filtered — ${parts.join(' · ')}`;
+    } else {
+      const shown = filteredFunds().length;
+      const total = state.data ? state.data.funds.length : 0;
+      desc.textContent = `Filtered: showing ${shown} of ${total} funds — ${parts.join(' · ')}`;
+    }
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+function clearAllFilters() {
+  state.search = '';
+  state.vintages = [];
+  state.funds = [];
+  state.annualYears = [];
+  state.entity = 'all';
+  msFundSearchText = '';
+  const fs = document.getElementById('ms-fund-search');
+  if (fs) fs.value = '';
+  renderMsVintage();
+  renderMsFund();
+  renderAll();
+}
+
+// ── Multi-select: Vintage ───────────────────────
+function getAllVintages() {
+  if (!state.data) return { years: [], hasTBD: false };
+  const years = new Set();
+  let hasTBD = false;
+  state.data.funds.forEach((f) => {
+    if (f.vintage) years.add(f.vintage);
+    else hasTBD = true;
+  });
+  return { years: [...years].sort((a, b) => b - a), hasTBD };
+}
+
+// Activity view: union of fund vintages and txn years — the calendar years with any activity.
+function getAllActivityYears() {
+  if (!state.data) return { years: [], hasTBD: false };
+  const years = new Set();
+  let hasTBD = false;
+  state.data.funds.forEach((f) => {
+    if (f.vintage) years.add(f.vintage);
+    else hasTBD = true;
+  });
+  state.data.txns.forEach((t) => {
+    if (t.year) years.add(t.year);
+  });
+  return { years: [...years].sort((a, b) => b - a), hasTBD };
+}
+
+function renderMsVintage() {
+  if (!state.data) return;
+  const isActivity = state.view === 'activity';
+  const { years, hasTBD } = isActivity ? getAllActivityYears() : getAllVintages();
+  const values = isActivity ? state.annualYears : state.vintages;
+  const selected = new Set(values.map(String));
+  const rows = [];
+  if (hasTBD) {
+    rows.push(renderMsOption('TBD', 'TBD*', selected.has('TBD')));
+  }
+  years.forEach((y) => rows.push(renderMsOption(String(y), String(y), selected.has(String(y)))));
+  document.getElementById('ms-vintage-options').innerHTML = rows.join('');
+  const total = years.length + (hasTBD ? 1 : 0);
+  document.getElementById('ms-vintage-count').textContent =
+    `${values.length} of ${total} selected`;
+}
+
+// ── Multi-select: Fund ──────────────────────────
+function getAllFundNames() {
+  if (!state.data) return [];
+  return [...new Set(state.data.funds.map((f) => f.fundName))].sort((a, b) => a.localeCompare(b));
+}
+
+function renderMsFund() {
+  if (!state.data) return;
+  const all = getAllFundNames();
+  const q = msFundSearchText.trim().toLowerCase();
+  const visible = q ? all.filter((n) => n.toLowerCase().includes(q)) : all;
+  const selected = new Set(state.funds);
+  const rows = visible.map((name) => renderMsOption(name, name, selected.has(name)));
+  if (!rows.length) {
+    rows.push('<div class="ms-option none">No funds match</div>');
+  }
+  document.getElementById('ms-fund-options').innerHTML = rows.join('');
+  document.getElementById('ms-fund-count').textContent =
+    `${state.funds.length} of ${all.length} selected`;
+}
+
+function renderMsOption(value, label, checked) {
+  return `<label class="ms-option">
+    <input type="checkbox" data-value="${escape(value)}" ${checked ? 'checked' : ''}>
+    <span>${escape(label)}</span>
+  </label>`;
+}
+
+function populateFilterOptions() {
+  renderMsVintage();
+  renderMsFund();
+}
+
+function filteredTxns() {
+  if (!state.data) return [];
+  let t = state.data.txns;
+  if (state.entity !== 'all') t = t.filter((x) => x.entity === state.entity);
+  return t;
+}
+
+function uniqueFundCount(rows) {
+  if (!rows || !rows.length) return 0;
+  return new Set(rows.map((r) => r.fundName)).size;
+}
+
+function totals(funds) {
+  return funds.reduce(
+    (acc, f) => {
+      acc.commitment += f.commitment || 0;
+      acc.called += f.called || 0;
+      acc.distributed += f.distributed || 0;
+      acc.nav += f.nav || 0;
+      return acc;
+    },
+    { commitment: 0, called: 0, distributed: 0, nav: 0 }
+  );
+}
+
+// ───────────────────────────────────────────────────────────
+// Render: KPIs
+// ───────────────────────────────────────────────────────────
+function renderKPIs() {
+  const funds = filteredFunds();
+  const t = totals(funds);
+  const totalValue = t.distributed + t.nav;
+  const tvpi = t.called > 0 ? totalValue / t.called : null;
+  const dpi = t.called > 0 ? t.distributed / t.called : null;
+  const pctFunded = t.commitment > 0 ? t.called / t.commitment : null;
+
+  document.getElementById('kpi-committed').textContent = fmtMoney(t.commitment, true);
+  const uFunds = uniqueFundCount(funds);
+  document.getElementById('kpi-fund-count').textContent =
+    `${uFunds} ${uFunds === 1 ? 'fund' : 'funds'}${funds.length !== uFunds ? ' · ' + funds.length + ' commitments' : ''}`;
+  document.getElementById('kpi-called').textContent = fmtMoney(t.called, true);
+  document.getElementById('kpi-pct-funded').textContent = pctFunded !== null ? fmtPct(pctFunded) + ' funded' : '—';
+  document.getElementById('kpi-distributed').textContent = fmtMoney(t.distributed, true);
+  document.getElementById('kpi-dpi').textContent = dpi !== null ? 'DPI ' + fmtMult(dpi) : '—';
+  document.getElementById('kpi-nav').textContent = fmtMoney(t.nav, true);
+  const navPct = totalValue > 0 ? t.nav / totalValue : null;
+  document.getElementById('kpi-nav-pct').textContent =
+    navPct !== null ? fmtPct(navPct) + ' of total value' : '—';
+  document.getElementById('kpi-total-value').textContent = fmtMoney(totalValue, true);
+  document.getElementById('kpi-tvpi').textContent = tvpi !== null ? 'TVPI ' + fmtMult(tvpi) : '—';
+}
+
+// ───────────────────────────────────────────────────────────
+// Render: Portfolio Table
+// ───────────────────────────────────────────────────────────
+function renderPortfolio() {
+  const funds = filteredFunds().slice();
+  const { col, asc } = state.sort;
+  funds.sort((a, b) => {
+    const av = a[col] ?? (typeof b[col] === 'number' ? -Infinity : '');
+    const bv = b[col] ?? (typeof a[col] === 'number' ? -Infinity : '');
+    if (typeof av === 'number' && typeof bv === 'number') return asc ? av - bv : bv - av;
+    const s = String(av).localeCompare(String(bv));
+    return asc ? s : -s;
+  });
+
+  const tbody = document.getElementById('portfolio-body');
+  tbody.innerHTML = funds
+    .map(
+      (f) => `
     <tr>
-      <td>${escapeHtml(f.fundName)}</td>
-      <td>${escapeHtml(f.firm || '')}</td>
-      <td>${escapeHtml(f.entity || '')}</td>
-      <td class="right">${f.vintage || ''}</td>
-      <td class="right">${fmt$(f.commitment)}</td>
-      <td class="right">${fmt$(f.called)}</td>
-      <td class="right">${fmt$(f.distributed)}</td>
-      <td class="right">${fmt$(f.nav)}</td>
-      <td class="right">${fmtMult(f.tvpi)}</td>
-      <td class="right">${fmtMult(f.dpi)}</td>
-      <td class="right">${fmtPct(f.irr)}</td>
-    </tr>`).join('');
+      <td class="num mono">${f.vintage ? f.vintage : '<span title="Vintage year unknown — needs to be confirmed">TBD*</span>'}</td>
+      <td>${escape(f.fundName)}</td>
+      <td>${f.firm ? '<span class="firm-link" data-firm="' + escape(f.firm) + '">' + escape(f.firm) + '</span>' : '<span class="muted">—</span>'}</td>
+      <td><span class="entity-pill ${f.entity}">${f.entity}</span></td>
+      <td class="num">${fmtMoney(f.commitment, true)}</td>
+      <td class="num">${fmtMoney(f.called, true)}</td>
+      <td class="num pos">${fmtMoney(f.distributed, true)}</td>
+      <td class="num">${fmtMoney(f.nav, true)}</td>
+      <td class="num mono">${fmtMult(f.tvpi)}</td>
+      <td class="num mono">${fmtMult(f.dpi)}</td>
+      <td class="num mono ${f.irr !== null && f.irr < 0 ? 'neg' : f.irr > 0 ? 'pos' : ''}">${fmtPct(f.irr)}</td>
+    </tr>`
+    )
+    .join('');
 
-  document.getElementById('content').innerHTML = `
-    <div class="kpis">
-      <div class="kpi"><div class="kpi-label">Funds</div><div class="kpi-value">${funds.length}</div></div>
-      <div class="kpi"><div class="kpi-label">Committed</div><div class="kpi-value">${fmt$(totalCommitted)}</div></div>
-      <div class="kpi"><div class="kpi-label">Called</div><div class="kpi-value">${fmt$(totalCalled)}</div></div>
-      <div class="kpi"><div class="kpi-label">Distributed</div><div class="kpi-value">${fmt$(totalDistributed)}</div></div>
-      <div class="kpi"><div class="kpi-label">NAV</div><div class="kpi-value">${fmt$(totalNav)}</div></div>
-      <div class="kpi"><div class="kpi-label">Portfolio TVPI</div><div class="kpi-value">${fmtMult(portfolioTvpi)}</div></div>
-      <div class="kpi"><div class="kpi-label">Portfolio DPI</div><div class="kpi-value">${fmtMult(portfolioDpi)}</div></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Funds (top 50 by total value)</div>
-      <table>
-        <thead><tr>
-          <th>Fund</th><th>Firm</th><th>Entity</th>
-          <th class="right">Vintage</th>
-          <th class="right">Committed</th><th class="right">Called</th>
-          <th class="right">Distributed</th><th class="right">NAV</th>
-          <th class="right">TVPI</th><th class="right">DPI</th><th class="right">IRR</th>
-        </tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
+  {
+    const uf = uniqueFundCount(funds);
+    document.getElementById('portfolio-count').textContent =
+      `${uf} ${uf === 1 ? 'fund' : 'funds'}${funds.length !== uf ? ' · ' + funds.length + ' commitments' : ''}`;
+  }
+
+  // sort indicators
+  document.querySelectorAll('#portfolio-table th').forEach((th) => {
+    th.classList.remove('sorted', 'asc');
+    if (th.dataset.sort === col) {
+      th.classList.add('sorted');
+      if (asc) th.classList.add('asc');
+    }
+  });
+
+  // Footer totals
+  const t = totals(funds);
+  const tv = t.distributed + t.nav;
+  const tvpi = t.called > 0 ? tv / t.called : null;
+  const dpi = t.called > 0 ? t.distributed / t.called : null;
+  document.getElementById('portfolio-foot').innerHTML = `
+    <tr>
+      <td></td>
+      <td class="foot-label">${uniqueFundCount(funds)} ${uniqueFundCount(funds) === 1 ? 'fund' : 'funds'}${funds.length !== uniqueFundCount(funds) ? ' · ' + funds.length + ' commits' : ''}</td>
+      <td></td>
+      <td></td>
+      <td class="num mono">${fmtMoney(t.commitment, true)}</td>
+      <td class="num mono">${fmtMoney(t.called, true)}</td>
+      <td class="num mono">${fmtMoney(t.distributed, true)}</td>
+      <td class="num mono">${fmtMoney(t.nav, true)}</td>
+      <td class="num mono">${fmtMult(tvpi)}</td>
+      <td class="num mono">${fmtMult(dpi)}</td>
+      <td class="num mono foot-label">—</td>
+    </tr>
   `;
 }
 
-function escapeHtml(s) {
-  return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// ───────────────────────────────────────────────────────────
+// Render: Vintages
+// ───────────────────────────────────────────────────────────
+function renderVintages() {
+  const funds = filteredFunds();
+  const byVintage = {};
+  funds.forEach((f) => {
+    const v = f.vintage || 'TBD';
+    if (!byVintage[v]) {
+      byVintage[v] = { vintage: v, count: 0, commitment: 0, called: 0, distributed: 0, nav: 0, _fundSet: new Set() };
+    }
+    const g = byVintage[v];
+    g._fundSet.add(f.fundName);
+    g.count = g._fundSet.size;
+    g.commitment += f.commitment || 0;
+    g.called += f.called || 0;
+    g.distributed += f.distributed || 0;
+    g.nav += f.nav || 0;
+  });
+  // Compute derived TVPI/DPI per row so they can be sorted on
+  Object.values(byVintage).forEach((r) => {
+    const tv = r.distributed + r.nav;
+    r.tvpi = r.called > 0 ? tv / r.called : null;
+    r.dpi = r.called > 0 ? r.distributed / r.called : null;
+  });
+
+  // Chart uses the full (unfiltered-by-search) set sorted chronologically
+  const chartRows = Object.values(byVintage).sort((a, b) => {
+    if (a.vintage === 'TBD') return -1;
+    if (b.vintage === 'TBD') return 1;
+    return a.vintage - b.vintage;
+  });
+
+  // Apply per-table search (matches vintage year string, incl. "TBD")
+  const q = (state.vintageSearch || '').trim().toLowerCase();
+  let rows = chartRows.slice();
+  if (q) {
+    rows = rows.filter((r) => {
+      const label = r.vintage === 'TBD' ? 'tbd' : String(r.vintage);
+      return label.includes(q);
+    });
+  }
+
+  // Apply column sort
+  const { col: sCol, asc: sAsc } = state.vintageSort;
+  rows.sort((a, b) => {
+    // TBD handling for vintage column specifically
+    if (sCol === 'vintage') {
+      if (a.vintage === 'TBD' && b.vintage === 'TBD') return 0;
+      if (a.vintage === 'TBD') return sAsc ? -1 : 1;
+      if (b.vintage === 'TBD') return sAsc ? 1 : -1;
+      return sAsc ? a.vintage - b.vintage : b.vintage - a.vintage;
+    }
+    const av = a[sCol] ?? -Infinity;
+    const bv = b[sCol] ?? -Infinity;
+    if (av === bv) return 0;
+    return sAsc ? av - bv : bv - av;
+  });
+
+  // Chart
+  if (charts.vintage) charts.vintage.destroy();
+  const ctx = document.getElementById('chart-vintage').getContext('2d');
+  charts.vintage = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: chartRows.map((r) => (r.vintage === 'TBD' ? 'TBD*' : String(r.vintage))),
+      datasets: [
+        {
+          label: 'Called',
+          data: chartRows.map((r) => r.called),
+          backgroundColor: cssVar('--chart-called'),
+          stack: 'commit',
+        },
+        {
+          label: 'Unfunded Commitment',
+          data: chartRows.map((r) => Math.max(0, r.commitment - r.called)),
+          backgroundColor: cssVar('--chart-unfunded'),
+          stack: 'commit',
+        },
+        {
+          label: 'Distributed',
+          data: chartRows.map((r) => r.distributed),
+          backgroundColor: cssVar('--chart-dist'),
+          stack: 'value',
+        },
+        {
+          label: 'NAV',
+          data: chartRows.map((r) => r.nav),
+          backgroundColor: cssVar('--chart-nav'),
+          stack: 'value',
+        },
+      ],
+    },
+    options: chartOptions({ stacked: true, money: true, yearX: true }),
+  });
+
+  // Table body
+  const tbody = document.getElementById('vintage-body');
+  tbody.innerHTML = rows
+    .map((r) => {
+      return `
+        <tr class="clickable" data-vintage="${r.vintage}" title="Click to view funds in ${r.vintage === 'TBD' ? 'the TBD cohort' : 'the ' + r.vintage + ' vintage'}">
+          <td class="num mono">${r.vintage === 'TBD' ? '<span title="Vintage year unknown — needs to be confirmed">TBD*</span>' : r.vintage}</td>
+          <td class="num">${r.count}</td>
+          <td class="num">${fmtMoney(r.commitment, true)}</td>
+          <td class="num">${fmtMoney(r.called, true)}</td>
+          <td class="num pos">${fmtMoney(r.distributed, true)}</td>
+          <td class="num">${fmtMoney(r.nav, true)}</td>
+          <td class="num mono">${fmtMult(r.tvpi)}</td>
+          <td class="num mono">${fmtMult(r.dpi)}</td>
+        </tr>`;
+    })
+    .join('');
+
+  // Row count
+  document.getElementById('vintage-count').textContent =
+    `${rows.length} ${rows.length === 1 ? 'vintage' : 'vintages'}`;
+
+  // Sort indicators
+  document.querySelectorAll('#vintage-table th').forEach((th) => {
+    th.classList.remove('sorted', 'asc');
+    if (th.dataset.sort === sCol) {
+      th.classList.add('sorted');
+      if (sAsc) th.classList.add('asc');
+    }
+  });
+
+  // Footer totals (sum across currently-displayed rows)
+  const ft = rows.reduce(
+    (acc, r) => {
+      acc.count += r.count;
+      acc.commitment += r.commitment;
+      acc.called += r.called;
+      acc.distributed += r.distributed;
+      acc.nav += r.nav;
+      return acc;
+    },
+    { count: 0, commitment: 0, called: 0, distributed: 0, nav: 0 }
+  );
+  const ftTv = ft.distributed + ft.nav;
+  const ftTvpi = ft.called > 0 ? ftTv / ft.called : null;
+  const ftDpi = ft.called > 0 ? ft.distributed / ft.called : null;
+  document.getElementById('vintage-foot').innerHTML = `
+    <tr>
+      <td class="foot-label">Total</td>
+      <td class="num mono">${ft.count}</td>
+      <td class="num mono">${fmtMoney(ft.commitment, true)}</td>
+      <td class="num mono">${fmtMoney(ft.called, true)}</td>
+      <td class="num mono">${fmtMoney(ft.distributed, true)}</td>
+      <td class="num mono">${fmtMoney(ft.nav, true)}</td>
+      <td class="num mono">${fmtMult(ftTvpi)}</td>
+      <td class="num mono">${fmtMult(ftDpi)}</td>
+    </tr>
+  `;
 }
 
-load();
+// ───────────────────────────────────────────────────────────
+// Render: Cash Flows
+// ───────────────────────────────────────────────────────────
+function renderCashflows() {
+  const txns = filteredTxns().filter((t) => t.date);
+  txns.sort((a, b) => a.date.localeCompare(b.date));
+
+  // Cumulative
+  let cumContrib = 0;
+  let cumDist = 0;
+  let cumNet = 0;
+  const cumPoints = txns.map((t) => {
+    if (t.amount < 0) cumContrib += t.amount;
+    else cumDist += t.amount;
+    cumNet = cumContrib + cumDist;
+    return { date: t.date, contrib: cumContrib, dist: cumDist, net: cumNet };
+  });
+
+  // Sample down to one point per month for perf
+  const monthly = {};
+  cumPoints.forEach((p) => {
+    const ym = p.date.slice(0, 7);
+    monthly[ym] = p;
+  });
+  const labels = Object.keys(monthly).sort();
+  const data = labels.map((l) => monthly[l]);
+
+  if (charts.cashflow) charts.cashflow.destroy();
+  const ctx = document.getElementById('chart-cashflow').getContext('2d');
+  charts.cashflow = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Cumulative Contributions (outflows)',
+          data: data.map((d) => d.contrib),
+          borderColor: cssVar('--chart-contrib'),
+          backgroundColor: hexToRgba(cssVar('--chart-contrib'), 0.08),
+          fill: true,
+          tension: 0.1,
+          pointRadius: 0,
+        },
+        {
+          label: 'Cumulative Distributions (inflows)',
+          data: data.map((d) => d.dist),
+          borderColor: cssVar('--chart-dist'),
+          backgroundColor: hexToRgba(cssVar('--chart-dist'), 0.08),
+          fill: true,
+          tension: 0.1,
+          pointRadius: 0,
+        },
+        {
+          label: 'Net',
+          data: data.map((d) => d.net),
+          borderColor: cssVar('--chart-net'),
+          borderWidth: 2,
+          fill: false,
+          tension: 0.1,
+          pointRadius: 0,
+        },
+      ],
+    },
+    options: chartOptions({ money: true, timeX: true }),
+  });
+}
+
+// ───────────────────────────────────────────────────────────
+// Annual Summary
+// ───────────────────────────────────────────────────────────
+function computeAnnualData() {
+  if (!state.data) return [];
+  // Apply the same global filters that Portfolio / Vintages use: entity, vintage multi-select, fund multi-select
+  const funds = filteredFunds();
+  // Txns are linked to funds by fundName; keep only txns whose fund passed the filter
+  const fundSet = new Set(funds.map((f) => f.fundName));
+  let txns = state.data.txns.filter((t) => fundSet.has(t.fundName));
+  if (state.entity !== 'all') txns = txns.filter((t) => t.entity === state.entity);
+
+  const byYear = {};
+  const row = (y) => {
+    if (!byYear[y]) byYear[y] = { year: y, funds: 0, commitment: 0, calls: 0, distributions: 0, _fundSet: new Set() };
+    return byYear[y];
+  };
+
+  funds.forEach((f) => {
+    const r = row(f.vintage || 'TBD');
+    r._fundSet.add(f.fundName);
+    r.funds = r._fundSet.size;
+    r.commitment += f.commitment || 0;
+  });
+
+  txns.forEach((t) => {
+    if (!t.year) return;
+    const r = row(t.year);
+    if (t.amount < 0) r.calls += Math.abs(t.amount);
+    else r.distributions += t.amount;
+  });
+
+  let rows = Object.values(byYear);
+  if (state.annualYears.length) {
+    const set = new Set(state.annualYears.map(String));
+    rows = rows.filter((r) => set.has(String(r.year)));
+  }
+  return rows;
+}
+
+function renderAnnual() {
+  const rows = computeAnnualData();
+  // Chart: always chronological with TBD pinned on the far left
+  const chronological = [...rows].sort((a, b) => {
+    if (a.year === 'TBD' && b.year === 'TBD') return 0;
+    if (a.year === 'TBD') return -1;
+    if (b.year === 'TBD') return 1;
+    return a.year - b.year;
+  });
+  renderAnnualChart(chronological);
+  // Table: apply search, then current sort
+  const q = (state.annualSearch || '').trim().toLowerCase();
+  const filtered = q
+    ? rows.filter((r) => (r.year === 'TBD' ? 'tbd' : String(r.year)).includes(q))
+    : rows;
+  const { col, asc } = state.annualSort;
+  const sorted = [...filtered].sort((a, b) => {
+    // TBD always sorts to the top edge on the year column
+    if (col === 'year') {
+      if (a.year === 'TBD' && b.year === 'TBD') return 0;
+      if (a.year === 'TBD') return asc ? -1 : 1;
+      if (b.year === 'TBD') return asc ? 1 : -1;
+      return asc ? a.year - b.year : b.year - a.year;
+    }
+    const av = a[col] ?? -Infinity;
+    const bv = b[col] ?? -Infinity;
+    return asc ? av - bv : bv - av;
+  });
+  renderAnnualTable(sorted, filtered);
+}
+
+function renderAnnualChart(rows) {
+  if (charts.annual) charts.annual.destroy();
+  const ctx = document.getElementById('chart-annual').getContext('2d');
+  charts.annual = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: rows.map((r) => (r.year === 'TBD' ? 'TBD*' : String(r.year))),
+      datasets: [
+        {
+          label: 'Commitment',
+          data: rows.map((r) => r.commitment),
+          backgroundColor: cssVar('--chart-nav'),
+        },
+        {
+          label: 'Capital Calls',
+          data: rows.map((r) => r.calls),
+          backgroundColor: cssVar('--chart-contrib'),
+        },
+        {
+          label: 'Distributions',
+          data: rows.map((r) => r.distributions),
+          backgroundColor: cssVar('--chart-dist'),
+        },
+      ],
+    },
+    options: {
+      ...chartOptions({ money: true, yearX: true }),
+      onClick: (evt, els, chart) => {
+        const points = chart.getElementsAtEventForMode(evt, 'index', { intersect: false }, true);
+        if (!points.length) return;
+        const row = rows[points[0].index];
+        if (row) openYear(row.year);
+      },
+      onHover: (evt, els, chart) => {
+        const points = chart.getElementsAtEventForMode(evt, 'index', { intersect: false }, true);
+        chart.canvas.style.cursor = points.length ? 'pointer' : 'default';
+      },
+    },
+  });
+}
+
+function renderAnnualTable(sorted, all) {
+  const tbody = document.getElementById('annual-body');
+  tbody.innerHTML = sorted
+    .map(
+      (r) => `
+    <tr class="clickable" data-year="${r.year}" style="cursor:pointer">
+      <td class="num mono"><a href="#" class="year-link" data-year="${r.year}">${r.year === 'TBD' ? '<span title="Vintage year unknown — needs to be confirmed">TBD*</span>' : r.year}</a></td>
+      <td class="num mono">${r.funds || '—'}</td>
+      <td class="num">${r.commitment > 0 ? fmtMoney(r.commitment, true) : '—'}</td>
+      <td class="num">${r.calls > 0 ? fmtMoney(r.calls, true) : '—'}</td>
+      <td class="num pos">${r.distributions > 0 ? fmtMoney(r.distributions, true) : '—'}</td>
+    </tr>`
+    )
+    .join('');
+
+  // Sort indicators
+  document.querySelectorAll('#annual-table th').forEach((th) => {
+    th.classList.remove('sorted', 'asc');
+    if (th.dataset.sort === state.annualSort.col) {
+      th.classList.add('sorted');
+      if (state.annualSort.asc) th.classList.add('asc');
+    }
+  });
+
+  // Footer totals
+  const tot = all.reduce(
+    (acc, r) => {
+      acc.funds += r.funds;
+      acc.commitment += r.commitment;
+      acc.calls += r.calls;
+      acc.distributions += r.distributions;
+      return acc;
+    },
+    { funds: 0, commitment: 0, calls: 0, distributions: 0 }
+  );
+  document.getElementById('annual-foot').innerHTML = `
+    <tr>
+      <td class="foot-label">Total</td>
+      <td class="num mono">${tot.funds}</td>
+      <td class="num mono">${fmtMoney(tot.commitment, true)}</td>
+      <td class="num mono">${fmtMoney(tot.calls, true)}</td>
+      <td class="num mono">${fmtMoney(tot.distributions, true)}</td>
+    </tr>
+  `;
+
+  const cnt = document.getElementById('annual-count');
+  if (cnt) cnt.textContent = `${all.length} ${all.length === 1 ? 'year' : 'years'}`;
+}
+
+const MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function fmtYM(label) {
+  // "1999-07" → "Jul '99"
+  const s = String(label);
+  const m = s.match(/^(\d{4})-(\d{2})$/);
+  if (!m) return s;
+  return `${MONTH_ABBR[parseInt(m[2], 10) - 1]} '${m[1].slice(2)}`;
+}
+
+function chartOptions({ stacked = false, money = false, timeX = false, yearX = false } = {}) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { family: 'IBM Plex Sans', size: 13 } } },
+      tooltip: {
+        callbacks: {
+          title: timeX
+            ? (items) => (items[0] ? fmtYM(items[0].label) : '')
+            : undefined,
+          label: (ctx) => {
+            const v = ctx.parsed.y;
+            return `${ctx.dataset.label}: ${money ? fmtMoney(v, true) : fmtInt(v)}`;
+          },
+        },
+      },
+    },
+    scales: {
+      x: {
+        type: 'category',
+        stacked,
+        grid: { display: false },
+        ticks: {
+          font: { family: 'IBM Plex Mono', size: 11 },
+          maxRotation: 0,
+          autoSkip: !yearX,
+          maxTicksLimit: yearX ? 100 : 18,
+          callback: function (value) {
+            const s = String(this.getLabelForValue(value));
+            if (timeX) return s.slice(0, 4);
+            // For annual/vintage charts: show every year, abbreviated as '98, '02, '23…
+            if (yearX) {
+              const m = s.match(/^(\d{4})$/);
+              if (m) return "'" + m[1].slice(2);
+            }
+            return s;
+          },
+        },
+      },
+      y: {
+        stacked,
+        ticks: {
+          font: { family: 'IBM Plex Mono', size: 11 },
+          callback: (v) => (money ? fmtMoney(v, true) : v),
+        },
+        grid: { color: '#F1F5F9' },
+      },
+    },
+  };
+}
+
+// ───────────────────────────────────────────────────────────
+// View switching
+// ───────────────────────────────────────────────────────────
+const VALID_VIEWS = ['portfolio', 'firms', 'vintages', 'cashflows', 'activity'];
+
+function placeFiltersInView(view) {
+  const filters = document.getElementById('global-filters');
+  const banner = document.getElementById('filter-banner');
+  if (!filters) return;
+  const viewEl = document.getElementById(`view-${view}`);
+  if (!viewEl) return;
+  // Target the card that holds the primary table (fallback to first card for chart-only views).
+  const tableCard = [...viewEl.querySelectorAll('.card')].find((c) => c.querySelector('table'))
+                 || viewEl.querySelector('.card');
+  if (!tableCard) return;
+  const toolbarRight = tableCard.querySelector('.toolbar-right');
+  if (toolbarRight) {
+    // Filters lead the toolbar; row-count is pushed to the right via CSS.
+    toolbarRight.insertBefore(filters, toolbarRight.firstChild);
+  } else {
+    // No toolbar (e.g., cashflows chart card) — put filters at the top of the card.
+    tableCard.insertBefore(filters, tableCard.firstChild);
+  }
+  // Banner sits right after the toolbar, above the table.
+  const toolbar = tableCard.querySelector('.table-toolbar');
+  if (toolbar && toolbar.parentNode) {
+    toolbar.parentNode.insertBefore(banner, toolbar.nextSibling);
+  } else {
+    tableCard.insertBefore(banner, filters.nextSibling);
+  }
+
+  // Cash Flows chart: entity-only. Hide the Vintage + Fund multi-selects
+  // on this view since they don't make sense alongside the cumulative line.
+  const hideMulti = view === 'cashflows';
+  document.getElementById('ms-vintage').style.display = hideMulti ? 'none' : '';
+  document.getElementById('ms-fund').style.display = hideMulti ? 'none' : '';
+}
+
+function showView(view, push = true) {
+  if (!VALID_VIEWS.includes(view)) view = 'portfolio';
+  state.view = view;
+  document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.view === view));
+  document.getElementById('view-portfolio').classList.toggle('hidden', view !== 'portfolio');
+  document.getElementById('view-firms').classList.toggle('hidden', view !== 'firms');
+  document.getElementById('view-vintages').classList.toggle('hidden', view !== 'vintages');
+  document.getElementById('view-cashflows').classList.toggle('hidden', view !== 'cashflows');
+  document.getElementById('view-activity').classList.toggle('hidden', view !== 'activity');
+  placeFiltersInView(view);
+  // Vintage multi-select is repurposed as a Year filter on the Activity view —
+  // re-render options + label so the chip reflects the right list.
+  renderMsVintage();
+  updateFilterUI();
+  if (view === 'firms') renderFirms();
+  if (view === 'vintages') renderVintages();
+  if (view === 'cashflows') renderCashflows();
+  if (view === 'activity') renderAnnual();
+  // Sync URL
+  const newPath = '/' + view;
+  if (push && window.location.pathname !== newPath) {
+    history.pushState({ view }, '', newPath);
+  }
+  // User-initiated nav: always land at the top of the new view.
+  if (push) window.scrollTo({ top: 0, behavior: 'auto' });
+}
+
+function viewFromPath() {
+  const p = window.location.pathname.replace(/^\/+|\/+$/g, '');
+  return VALID_VIEWS.includes(p) ? p : 'portfolio';
+}
+
+window.addEventListener('popstate', () => {
+  showView(viewFromPath(), false);
+  applyModalFromURL();
+});
+
+// ───────────────────────────────────────────────────────────
+// Full render
+// ───────────────────────────────────────────────────────────
+function renderAll() {
+  updateFilterUI();
+  renderKPIs();
+  renderPortfolio();
+  if (state.view === 'firms') renderFirms();
+  if (state.view === 'vintages') renderVintages();
+  if (state.view === 'cashflows') renderCashflows();
+  if (state.view === 'activity') renderAnnual();
+}
+
+// ───────────────────────────────────────────────────────────
+// Firm aggregation
+// ───────────────────────────────────────────────────────────
+function computeFirmRollup(funds) {
+  const byFirm = {};
+  funds.forEach((f) => {
+    const key = f.firm && f.firm.trim() ? f.firm.trim() : '(Unmapped)';
+    if (!byFirm[key]) {
+      byFirm[key] = {
+        firm: key,
+        unmapped: !f.firm || !f.firm.trim(),
+        funds: [],
+        fundCount: 0,
+        commitmentCount: 0,
+        _fundSet: new Set(),
+        commitment: 0,
+        called: 0,
+        distributed: 0,
+        nav: 0,
+        firstVintage: null,
+        lastVintage: null,
+        _irrSum: 0,
+        _irrWeight: 0,
+      };
+    }
+    const g = byFirm[key];
+    g.funds.push(f);
+    g._fundSet.add(f.fundName);
+    g.fundCount = g._fundSet.size;
+    g.commitmentCount++;
+    g.commitment += f.commitment || 0;
+    g.called += f.called || 0;
+    g.distributed += f.distributed || 0;
+    g.nav += f.nav || 0;
+    if (f.vintage) {
+      if (g.firstVintage == null || f.vintage < g.firstVintage) g.firstVintage = f.vintage;
+      if (g.lastVintage == null || f.vintage > g.lastVintage) g.lastVintage = f.vintage;
+    }
+    if (f.irr !== null && f.irr !== undefined && f.called > 0) {
+      g._irrSum += f.irr * f.called;
+      g._irrWeight += f.called;
+    }
+  });
+  Object.values(byFirm).forEach((g) => {
+    const tv = g.distributed + g.nav;
+    g.totalValue = tv;
+    g.tvpi = g.called > 0 ? tv / g.called : null;
+    g.dpi = g.called > 0 ? g.distributed / g.called : null;
+    g.irr = g._irrWeight > 0 ? g._irrSum / g._irrWeight : null;
+  });
+  return Object.values(byFirm);
+}
+
+function renderFirms() {
+  const rolled = computeFirmRollup(filteredFunds());
+
+  const q = (state.firmSearch || '').trim().toLowerCase();
+  let rows = q ? rolled.filter((r) => r.firm.toLowerCase().includes(q)) : rolled.slice();
+
+  const { col, asc } = state.firmSort;
+  rows.sort((a, b) => {
+    const av = a[col];
+    const bv = b[col];
+    if (av === null || av === undefined) return 1;
+    if (bv === null || bv === undefined) return -1;
+    if (typeof av === 'number' && typeof bv === 'number') return asc ? av - bv : bv - av;
+    const s = String(av).localeCompare(String(bv));
+    return asc ? s : -s;
+  });
+
+  const tbody = document.getElementById('firms-body');
+  tbody.innerHTML = rows.map((r) => `
+    <tr class="clickable" data-firm="${escape(r.firm)}">
+      <td>${r.unmapped ? '<span class="muted" style="font-style:italic">' + escape(r.firm) + '</span>' : '<span class="firm-link">' + escape(r.firm) + '</span>'}</td>
+      <td class="num mono">${r.fundCount}</td>
+      <td class="num mono">${r.firstVintage || '—'}</td>
+      <td class="num mono">${r.lastVintage || '—'}</td>
+      <td class="num">${fmtMoney(r.commitment, true)}</td>
+      <td class="num">${fmtMoney(r.called, true)}</td>
+      <td class="num pos">${fmtMoney(r.distributed, true)}</td>
+      <td class="num">${fmtMoney(r.nav, true)}</td>
+      <td class="num mono">${fmtMult(r.tvpi)}</td>
+      <td class="num mono">${fmtMult(r.dpi)}</td>
+      <td class="num mono ${r.irr !== null && r.irr < 0 ? 'neg' : r.irr > 0 ? 'pos' : ''}">${fmtPct(r.irr)}</td>
+    </tr>`).join('');
+
+  document.getElementById('firms-count').textContent = `${rows.length} ${rows.length === 1 ? 'firm' : 'firms'}`;
+
+  document.querySelectorAll('#firms-table th').forEach((th) => {
+    th.classList.remove('sorted', 'asc');
+    if (th.dataset.sort === col) {
+      th.classList.add('sorted');
+      if (asc) th.classList.add('asc');
+    }
+  });
+
+  const ft = rows.reduce((acc, r) => {
+    acc.commitment += r.commitment;
+    acc.called += r.called;
+    acc.distributed += r.distributed;
+    acc.nav += r.nav;
+    acc.fundCount += r.fundCount;
+    return acc;
+  }, { commitment: 0, called: 0, distributed: 0, nav: 0, fundCount: 0 });
+  const ftTv = ft.distributed + ft.nav;
+  const ftTvpi = ft.called > 0 ? ftTv / ft.called : null;
+  const ftDpi = ft.called > 0 ? ft.distributed / ft.called : null;
+  document.getElementById('firms-foot').innerHTML = `
+    <tr>
+      <td class="foot-label">${rows.length} ${rows.length === 1 ? 'firm' : 'firms'}</td>
+      <td class="num mono">${ft.fundCount}</td>
+      <td></td>
+      <td></td>
+      <td class="num mono">${fmtMoney(ft.commitment, true)}</td>
+      <td class="num mono">${fmtMoney(ft.called, true)}</td>
+      <td class="num mono">${fmtMoney(ft.distributed, true)}</td>
+      <td class="num mono">${fmtMoney(ft.nav, true)}</td>
+      <td class="num mono">${fmtMult(ftTvpi)}</td>
+      <td class="num mono">${fmtMult(ftDpi)}</td>
+      <td></td>
+    </tr>`;
+}
+
+// ───────────────────────────────────────────────────────────
+// Firm detail modal
+// ───────────────────────────────────────────────────────────
+let openFirmName = null;
+function openFirm(firmName, opts = {}) {
+  if (!state.data) return;
+  const push = opts.push !== false;
+  openFirmName = firmName;
+  let funds = state.data.funds.filter((f) => {
+    const fn = f.firm && f.firm.trim() ? f.firm.trim() : '(Unmapped)';
+    return fn === firmName;
+  });
+  if (state.entity !== 'all') funds = funds.filter((f) => f.entity === state.entity);
+  if (funds.length === 0) return;
+
+  const commitment = funds.reduce((s, f) => s + (f.commitment || 0), 0);
+  const called = funds.reduce((s, f) => s + (f.called || 0), 0);
+  const distributed = funds.reduce((s, f) => s + (f.distributed || 0), 0);
+  const nav = funds.reduce((s, f) => s + (f.nav || 0), 0);
+  const totalValue = distributed + nav;
+  const tvpi = called > 0 ? totalValue / called : null;
+  const dpi = called > 0 ? distributed / called : null;
+  let irrSum = 0, irrW = 0;
+  funds.forEach((f) => {
+    if (f.irr !== null && f.irr !== undefined && f.called > 0) {
+      irrSum += f.irr * f.called;
+      irrW += f.called;
+    }
+  });
+  const irr = irrW > 0 ? irrSum / irrW : null;
+  const vintages = funds.map((f) => f.vintage).filter(Boolean);
+  const firstV = vintages.length ? Math.min(...vintages) : null;
+  const lastV = vintages.length ? Math.max(...vintages) : null;
+
+  document.getElementById('fd-name').textContent = firmName;
+  const vintageRange = firstV
+    ? (firstV === lastV ? String(firstV) : firstV + ' – ' + lastV)
+    : 'Vintage TBD';
+  const entityFilterTxt = state.entity === 'all' ? '' : ' · ' + state.entity + ' only';
+  {
+    const u = uniqueFundCount(funds);
+    const commitsSuffix = funds.length !== u ? ' · ' + funds.length + ' commitments' : '';
+    document.getElementById('fd-meta').textContent =
+      `${u} fund${u === 1 ? '' : 's'}${commitsSuffix} · ${vintageRange}${entityFilterTxt}`;
+  }
+
+  document.getElementById('fd-kpis').innerHTML = [
+    ['Committed', fmtMoney(commitment, true), ''],
+    ['Called', fmtMoney(called, true), ''],
+    ['Distributed', fmtMoney(distributed, true), 'pos'],
+    ['NAV', fmtMoney(nav, true), ''],
+    ['TVPI', fmtMult(tvpi), ''],
+    ['Net IRR', fmtPct(irr), irr !== null && irr < 0 ? 'neg' : (irr > 0 ? 'pos' : '')],
+  ].map(([l, v, cls]) => `
+    <div class="fd-kpi">
+      <div class="label">${l}</div>
+      <div class="value ${cls}">${v}</div>
+    </div>`).join('');
+
+  const fundNameSet = new Set(funds.map((f) => f.fundName));
+  let txns = state.data.txns.filter((t) => fundNameSet.has(t.fundName));
+  if (state.entity !== 'all') txns = txns.filter((t) => t.entity === state.entity);
+  const byYear = {};
+  funds.forEach((f) => {
+    if (f.vintage) {
+      if (!byYear[f.vintage]) byYear[f.vintage] = { year: f.vintage, commitment: 0, calls: 0, distributions: 0 };
+      byYear[f.vintage].commitment += f.commitment || 0;
+    }
+  });
+  txns.forEach((t) => {
+    if (!t.year) return;
+    if (!byYear[t.year]) byYear[t.year] = { year: t.year, commitment: 0, calls: 0, distributions: 0 };
+    if (t.amount < 0) byYear[t.year].calls += Math.abs(t.amount);
+    else byYear[t.year].distributions += t.amount;
+  });
+  const yrs = Object.values(byYear).sort((a, b) => a.year - b.year);
+
+  if (charts.firmAnnual) charts.firmAnnual.destroy();
+  const ctx = document.getElementById('fd-chart').getContext('2d');
+  charts.firmAnnual = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: yrs.map((r) => String(r.year)),
+      datasets: [
+        { label: 'Commitment', data: yrs.map((r) => r.commitment), backgroundColor: cssVar('--chart-nav') },
+        { label: 'Capital Calls', data: yrs.map((r) => r.calls), backgroundColor: cssVar('--chart-contrib') },
+        { label: 'Distributions', data: yrs.map((r) => r.distributions), backgroundColor: cssVar('--chart-dist') },
+      ],
+    },
+    options: chartOptions({ money: true }),
+  });
+
+  const sorted = funds.slice().sort((a, b) => (a.vintage || 9999) - (b.vintage || 9999));
+  document.getElementById('fd-funds-body').innerHTML = sorted.map((f) => `
+    <tr>
+      <td class="num mono">${f.vintage || '<span title="Vintage unknown">TBD*</span>'}</td>
+      <td>${escape(f.fundName)}</td>
+      <td><span class="entity-pill ${f.entity}">${f.entity}</span></td>
+      <td class="num">${fmtMoney(f.commitment, true)}</td>
+      <td class="num">${fmtMoney(f.called, true)}</td>
+      <td class="num pos">${fmtMoney(f.distributed, true)}</td>
+      <td class="num">${fmtMoney(f.nav, true)}</td>
+      <td class="num mono">${fmtMult(f.tvpi)}</td>
+      <td class="num mono">${fmtMult(f.dpi)}</td>
+      <td class="num mono ${f.irr !== null && f.irr < 0 ? 'neg' : f.irr > 0 ? 'pos' : ''}">${fmtPct(f.irr)}</td>
+    </tr>`).join('');
+  document.getElementById('fd-funds-foot').innerHTML = `
+    <tr>
+      <td></td>
+      <td class="foot-label">${uniqueFundCount(funds)} ${uniqueFundCount(funds) === 1 ? 'fund' : 'funds'}${funds.length !== uniqueFundCount(funds) ? ' · ' + funds.length + ' commits' : ''}</td>
+      <td></td>
+      <td class="num mono">${fmtMoney(commitment, true)}</td>
+      <td class="num mono">${fmtMoney(called, true)}</td>
+      <td class="num mono">${fmtMoney(distributed, true)}</td>
+      <td class="num mono">${fmtMoney(nav, true)}</td>
+      <td class="num mono">${fmtMult(tvpi)}</td>
+      <td class="num mono">${fmtMult(dpi)}</td>
+      <td class="num mono ${irr !== null && irr < 0 ? 'neg' : irr > 0 ? 'pos' : ''}">${fmtPct(irr)}</td>
+    </tr>`;
+
+  document.getElementById('fd-overlay').classList.add('open');
+
+  if (push) {
+    const url = '/' + state.view + '?firm=' + encodeURIComponent(firmName);
+    history.pushState({ view: state.view, modal: { type: 'firm', value: firmName } }, '', url);
+  }
+}
+
+function hideFirmModal() {
+  document.getElementById('fd-overlay').classList.remove('open');
+  openFirmName = null;
+}
+
+function closeFirm() {
+  // If the modal is represented in the URL, use history.back() so the back
+  // button and the close button behave the same. popstate → applyModalFromURL
+  // will hide the overlay.
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('firm')) {
+    history.back();
+    return;
+  }
+  hideFirmModal();
+}
+
+// ───────────────────────────────────────────────────────────
+// Year drill-down
+// ───────────────────────────────────────────────────────────
+let openYearNum = null;
+
+function openYear(year, opts = {}) {
+  if (!state.data) return;
+  const push = opts.push !== false;
+  const y = year === 'TBD' ? 'TBD' : Number(year);
+  if (!y) return;
+  openYearNum = y;
+  const sel = document.getElementById('yr-entity-select');
+  if (sel) sel.value = 'all';
+  renderYear();
+  document.getElementById('yr-overlay').classList.add('open');
+
+  if (push) {
+    const url = '/' + state.view + '?year=' + encodeURIComponent(y);
+    history.pushState({ view: state.view, modal: { type: 'year', value: String(y) } }, '', url);
+  }
+}
+
+function renderYear() {
+  const y = openYearNum;
+  if (!y || !state.data) return;
+  const entitySel = document.getElementById('yr-entity-select');
+  const modalEntity = entitySel.value;
+  entitySel.classList.toggle('filter-active', modalEntity !== 'all');
+
+  let funds = filteredFunds();
+  if (modalEntity !== 'all') funds = funds.filter((f) => f.entity === modalEntity);
+  const fundSet = new Set(funds.map((f) => f.fundName));
+  const commits = y === 'TBD'
+    ? funds.filter((f) => !f.vintage)
+    : funds.filter((f) => f.vintage === y);
+  let txns = y === 'TBD'
+    ? []
+    : state.data.txns.filter((t) => t.year === y && fundSet.has(t.fundName));
+  if (modalEntity !== 'all') txns = txns.filter((t) => t.entity === modalEntity);
+  else if (state.entity !== 'all') txns = txns.filter((t) => t.entity === state.entity);
+  const calls = txns.filter((t) => t.amount < 0).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+  const dists = txns.filter((t) => t.amount > 0).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+
+  const totCommit = commits.reduce((s, f) => s + (f.commitment || 0), 0);
+  const totCalls = calls.reduce((s, t) => s + Math.abs(t.amount || 0), 0);
+  const totDist = dists.reduce((s, t) => s + (t.amount || 0), 0);
+
+  document.getElementById('yr-name').textContent = y === 'TBD' ? 'Vintage TBD — Commitments' : `${y} Activity`;
+
+  document.getElementById('yr-kpis').innerHTML = `
+    <div class="fd-kpi clickable" data-scroll="yr-commit-title"><div class="label">Funds Committed</div><div class="value">${commits.length}</div></div>
+    <div class="fd-kpi clickable" data-scroll="yr-commit-title"><div class="label">Commitment</div><div class="value">${fmtMoney(totCommit, true)}</div></div>
+    <div class="fd-kpi clickable" data-scroll="yr-calls-title"><div class="label">Capital Calls</div><div class="value">${fmtMoney(totCalls, true)}</div></div>
+    <div class="fd-kpi clickable" data-scroll="yr-dist-title"><div class="label">Distributions</div><div class="value pos">${fmtMoney(totDist, true)}</div></div>
+  `;
+
+  const entityPill = (e) => e ? `<span class="entity-pill ${e === 'ALPHA' ? 'alpha' : 'beta'}">${e}</span>` : '—';
+
+  const cBody = document.getElementById('yr-commit-body');
+  if (commits.length) {
+    const cSort = state.yrCommitSort;
+    cBody.innerHTML = sortByCol(commits, cSort.col, cSort.asc)
+      .map((f) => `
+        <tr>
+          <td>${f.fundName}</td>
+          <td>${f.firm || '—'}</td>
+          <td>${entityPill(f.entity)}</td>
+          <td class="num">${fmtMoney(f.commitment || 0, true)}</td>
+        </tr>`)
+      .join('');
+    document.getElementById('yr-commit-foot').innerHTML = `
+      <tr><td class="foot-label" colspan="3">${commits.length} ${commits.length === 1 ? 'commitment' : 'commitments'}</td>
+      <td class="num mono">${fmtMoney(totCommit, true)}</td></tr>`;
+  } else {
+    cBody.innerHTML = `<tr><td colspan="4" class="muted" style="text-align:center; padding:14px; line-height:1.5;">No new commitments this year…yet!<br><span style="font-size:12px;">(Note: We may have made commitments but not signed subscription documents yet.)</span></td></tr>`;
+    document.getElementById('yr-commit-foot').innerHTML = '';
+  }
+
+  const aggByFund = (list) => {
+    const m = new Map();
+    list.forEach((t) => {
+      const key = `${t.fundName}|${t.entity || ''}`;
+      if (!m.has(key)) m.set(key, { fundName: t.fundName, entity: t.entity || '', count: 0, amount: 0 });
+      const row = m.get(key);
+      row.count += 1;
+      row.amount += Math.abs(t.amount || 0);
+    });
+    return [...m.values()];
+  };
+
+  const renderAggRows = (rows) => rows.map((r) => `
+    <tr>
+      <td>${r.fundName}</td>
+      <td>${entityPill(r.entity)}</td>
+      <td class="num mono">${r.count}</td>
+      <td class="num">${fmtMoney(r.amount, true)}</td>
+    </tr>`).join('');
+
+  const distAgg = aggByFund(dists);
+  const distBody = document.getElementById('yr-dist-body');
+  if (distAgg.length) {
+    const dSort = state.yrDistSort;
+    distBody.innerHTML = renderAggRows(sortByCol(distAgg, dSort.col, dSort.asc));
+    const txnCount = dists.length;
+    document.getElementById('yr-dist-foot').innerHTML = `
+      <tr><td class="foot-label" colspan="2">${distAgg.length} ${distAgg.length === 1 ? 'fund' : 'funds'}</td>
+      <td class="num mono">${txnCount}</td>
+      <td class="num mono pos">${fmtMoney(totDist, true)}</td></tr>`;
+  } else {
+    distBody.innerHTML = `<tr><td colspan="4" class="muted" style="text-align:center; padding:14px;">No distributions this year.</td></tr>`;
+    document.getElementById('yr-dist-foot').innerHTML = '';
+  }
+
+  const callsAgg = aggByFund(calls);
+  const callsBody = document.getElementById('yr-calls-body');
+  if (callsAgg.length) {
+    const caSort = state.yrCallsSort;
+    callsBody.innerHTML = renderAggRows(sortByCol(callsAgg, caSort.col, caSort.asc));
+    const txnCount = calls.length;
+    document.getElementById('yr-calls-foot').innerHTML = `
+      <tr><td class="foot-label" colspan="2">${callsAgg.length} ${callsAgg.length === 1 ? 'fund' : 'funds'}</td>
+      <td class="num mono">${txnCount}</td>
+      <td class="num mono">${fmtMoney(totCalls, true)}</td></tr>`;
+  } else {
+    callsBody.innerHTML = `<tr><td colspan="4" class="muted" style="text-align:center; padding:14px;">No capital calls this year.</td></tr>`;
+    document.getElementById('yr-calls-foot').innerHTML = '';
+  }
+
+  // Sync sort indicator carets on the three modal-table headers.
+  const sortMap = [
+    ['yr-commit-table', state.yrCommitSort],
+    ['yr-dist-table', state.yrDistSort],
+    ['yr-calls-table', state.yrCallsSort],
+  ];
+  sortMap.forEach(([id, s]) => {
+    document.querySelectorAll(`#${id} th[data-sort]`).forEach((th) => {
+      th.classList.remove('sorted', 'asc');
+      if (th.dataset.sort === s.col) {
+        th.classList.add('sorted');
+        if (s.asc) th.classList.add('asc');
+      }
+    });
+  });
+}
+
+// Generic column sorter used by the year-modal tables. Numeric columns sort
+// numerically; everything else uses locale-aware string compare.
+function sortByCol(rows, col, asc) {
+  return [...rows].sort((a, b) => {
+    const av = a[col];
+    const bv = b[col];
+    const aNum = typeof av === 'number';
+    const bNum = typeof bv === 'number';
+    if (aNum && bNum) return asc ? av - bv : bv - av;
+    const as = (av ?? '').toString();
+    const bs = (bv ?? '').toString();
+    return asc ? as.localeCompare(bs) : bs.localeCompare(as);
+  });
+}
+
+function hideYearModal() {
+  document.getElementById('yr-overlay').classList.remove('open');
+  openYearNum = null;
+}
+
+function closeYear() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('year')) {
+    history.back();
+    return;
+  }
+  hideYearModal();
+}
+
+function applyModalFromURL() {
+  const params = new URLSearchParams(window.location.search);
+  const firm = params.get('firm');
+  const year = params.get('year');
+
+  if (firm) {
+    if (openYearNum !== null) hideYearModal();
+    if (openFirmName !== firm) openFirm(firm, { push: false });
+  } else if (year) {
+    if (openFirmName) hideFirmModal();
+    const y = year === 'TBD' ? 'TBD' : Number(year);
+    if (String(openYearNum) !== String(y)) openYear(y, { push: false });
+  } else {
+    if (openFirmName) hideFirmModal();
+    if (openYearNum !== null) hideYearModal();
+  }
+}
+
+// ───────────────────────────────────────────────────────────
+// Global firm search (header)
+// ───────────────────────────────────────────────────────────
+function globalFirmSearch() {
+  if (!state.data) return;
+  const q = document.getElementById('gs-input').value.trim().toLowerCase();
+  const drop = document.getElementById('gs-drop');
+  if (!q) { drop.classList.remove('open'); return; }
+
+  // Roll up all firms (ignore view filters so search is global)
+  const rolled = computeFirmRollup(state.data.funds);
+  const matches = rolled
+    .filter((r) => r.firm.toLowerCase().includes(q))
+    .sort((a, b) => b.commitment - a.commitment)
+    .slice(0, 10);
+
+  if (matches.length === 0) {
+    drop.innerHTML = '<div class="gs-item gs-empty">No firms match</div>';
+  } else {
+    drop.innerHTML = matches.map((r) => {
+      const meta = `${r.fundCount} ${r.fundCount === 1 ? 'fund' : 'funds'} · ${fmtMoney(r.commitment, true)}`;
+      return `<div class="gs-item" data-firm="${escape(r.firm)}"><span>${escape(r.firm)}</span><span class="gs-val">${meta}</span></div>`;
+    }).join('');
+  }
+  drop.classList.add('open');
+}
+
+function globalFirmSelect(firm) {
+  document.getElementById('gs-input').value = '';
+  document.getElementById('gs-drop').classList.remove('open');
+  openFirm(firm);
+}
+
+// ───────────────────────────────────────────────────────────
+// Utilities
+// ───────────────────────────────────────────────────────────
+function escape(s) {
+  return String(s ?? '').replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
+}
+
+function formatLastFetch(ms) {
+  if (!ms) return '—';
+  const d = new Date(ms);
+  return 'Updated ' + d.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+}
+
+// ───────────────────────────────────────────────────────────
+// Event wiring
+// ───────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach((t) =>
+  t.addEventListener('click', () => {
+    // Filters belong to the table/tab you're looking at — don't carry
+    // per-table selections across to a different tab. (Drill-downs that
+    // call showView() directly, e.g. Vintages → Portfolio, still preserve
+    // filter state because they bypass this handler.)
+    if (t.dataset.view !== state.view) {
+      state.vintages = [];
+      state.funds = [];
+      state.annualYears = [];
+      msFundSearchText = '';
+      const fs = document.getElementById('ms-fund-search');
+      if (fs) fs.value = '';
+      renderMsVintage();
+      renderMsFund();
+    }
+    showView(t.dataset.view);
+  })
+);
+
+document.getElementById('home-link').addEventListener('click', (e) => {
+  // Let cmd/ctrl/middle-click open in a new tab; handle normal click in-SPA
+  if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+  e.preventDefault();
+  showView('portfolio');
+});
+
+// ── Feedback widget ─────────────────────────────
+const VIEW_TITLES = { portfolio: 'Portfolio', firms: 'Firms', vintages: 'Vintages', cashflows: 'Cash Flows', activity: 'Activity By Year' };
+
+function currentPageLabel() {
+  const base = VIEW_TITLES[state.view] || 'Unknown';
+  if (openFirmName) return `Firm Profile: ${openFirmName}`;
+  return base;
+}
+
+function openFeedback() {
+  const panel = document.getElementById('fb-panel');
+  // Reset success screen if lingering
+  const existingSuccess = panel.querySelector('.fb-success');
+  if (existingSuccess) existingSuccess.remove();
+  document.getElementById('fb-body').style.display = '';
+  document.getElementById('fb-title').textContent = 'Send Feedback';
+
+  document.getElementById('fb-page-tag').textContent = 'Page: ' + currentPageLabel();
+  document.getElementById('fb-text').value = '';
+  document.getElementById('fb-error').style.display = 'none';
+  const submit = document.getElementById('fb-submit-btn');
+  submit.classList.remove('loading');
+  submit.textContent = 'Submit';
+
+  // Prefill name from localStorage if we've seen them before
+  try {
+    const saved = localStorage.getItem('ff-demo-fb-name');
+    if (saved) document.getElementById('fb-name').value = saved;
+    else document.getElementById('fb-name').value = '';
+  } catch (e) {}
+
+  // Reset checkboxes
+  document.querySelectorAll('#fb-types input[type=checkbox]').forEach((cb) => {
+    cb.checked = false;
+    cb.closest('.fb-check').classList.remove('on');
+  });
+
+  document.getElementById('fb-overlay').classList.add('open');
+  setTimeout(() => {
+    const name = document.getElementById('fb-name');
+    (name.value ? document.getElementById('fb-text') : name).focus();
+  }, 100);
+}
+function closeFeedback() {
+  document.getElementById('fb-overlay').classList.remove('open');
+}
+function showFbSuccess() {
+  const panel = document.getElementById('fb-panel');
+  document.getElementById('fb-body').style.display = 'none';
+  document.getElementById('fb-title').textContent = '';
+  const suc = document.createElement('div');
+  suc.className = 'fb-success';
+  suc.innerHTML = `
+    <div class="fb-success-msg" style="margin-bottom:14px;">Mollie says ruf, roof, roof!</div>
+    <div class="fb-success-sub" style="line-height:1.5; margin-bottom:14px;">(Thanks for your feedback … now take me to the beach please.)</div>
+    <img src="/static/mollie.jpg" alt="Mollie on the beach" style="width:100%; max-height:280px; object-fit:cover; border-radius:10px;">
+  `;
+  panel.appendChild(suc);
+}
+async function submitFeedback() {
+  const name = document.getElementById('fb-name').value.trim();
+  const text = document.getElementById('fb-text').value.trim();
+  const type = Array.from(document.querySelectorAll('#fb-types input[type=checkbox]:checked'))
+    .map((cb) => cb.value)
+    .join(', ');
+  const errEl = document.getElementById('fb-error');
+  const btn = document.getElementById('fb-submit-btn');
+
+  if (!name) {
+    document.getElementById('fb-name').focus();
+    return;
+  }
+  if (!text) {
+    document.getElementById('fb-text').focus();
+    return;
+  }
+  try { localStorage.setItem('ff-demo-fb-name', name); } catch (e) {}
+
+  btn.classList.add('loading');
+  btn.textContent = 'Saving…';
+  errEl.style.display = 'none';
+
+  try {
+    const res = await fetch('/api/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        type,
+        comment: text,
+        page: document.getElementById('fb-page-tag').textContent || 'Unknown',
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || ('HTTP ' + res.status));
+    }
+    showFbSuccess();
+  } catch (e) {
+    btn.classList.remove('loading');
+    btn.textContent = 'Submit';
+    errEl.textContent = 'Could not save feedback: ' + e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+document.getElementById('fb-open-btn').addEventListener('click', openFeedback);
+document.getElementById('fb-close-btn').addEventListener('click', closeFeedback);
+document.getElementById('fb-cancel-btn').addEventListener('click', closeFeedback);
+document.getElementById('fb-submit-btn').addEventListener('click', submitFeedback);
+document.getElementById('fb-overlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeFeedback();
+});
+// Sync the visual "on" state on the type chips
+document.querySelectorAll('#fb-types .fb-check input').forEach((cb) =>
+  cb.addEventListener('change', (e) => {
+    e.target.closest('.fb-check').classList.toggle('on', e.target.checked);
+  })
+);
+// Escape key closes the modal
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const yr = document.getElementById('yr-overlay');
+    if (yr && yr.classList.contains('open')) { closeYear(); return; }
+    const fd = document.getElementById('fd-overlay');
+    if (fd && fd.classList.contains('open')) { closeFirm(); return; }
+    const overlay = document.getElementById('fb-overlay');
+    if (overlay && overlay.classList.contains('open')) closeFeedback();
+  }
+});
+
+// Theme picker
+document.getElementById('theme-btn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const dd = document.getElementById('theme-dropdown');
+  const btn = document.getElementById('theme-btn');
+  // close font picker if open
+  document.getElementById('font-dropdown').classList.remove('open');
+  const open = dd.classList.toggle('open');
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+});
+// Font picker
+document.getElementById('font-btn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const dd = document.getElementById('font-dropdown');
+  const btn = document.getElementById('font-btn');
+  // close theme picker if open
+  document.getElementById('theme-dropdown').classList.remove('open');
+  const open = dd.classList.toggle('open');
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+});
+document.addEventListener('click', () => {
+  const td = document.getElementById('theme-dropdown');
+  if (td.classList.contains('open')) {
+    td.classList.remove('open');
+    document.getElementById('theme-btn').setAttribute('aria-expanded', 'false');
+  }
+  const fd = document.getElementById('font-dropdown');
+  if (fd.classList.contains('open')) {
+    fd.classList.remove('open');
+    document.getElementById('font-btn').setAttribute('aria-expanded', 'false');
+  }
+});
+
+document.getElementById('entity-select').addEventListener('change', (e) => {
+  state.entity = e.target.value;
+  renderAll();
+});
+
+document.querySelectorAll('#portfolio-table th[data-sort]').forEach((th) =>
+  th.addEventListener('click', () => {
+    const col = th.dataset.sort;
+    if (state.sort.col === col) state.sort.asc = !state.sort.asc;
+    else {
+      state.sort.col = col;
+      state.sort.asc = false;
+    }
+    renderPortfolio();
+  })
+);
+
+document.querySelectorAll('#firms-table th[data-sort]').forEach((th) =>
+  th.addEventListener('click', () => {
+    const col = th.dataset.sort;
+    if (state.firmSort.col === col) state.firmSort.asc = !state.firmSort.asc;
+    else {
+      state.firmSort.col = col;
+      state.firmSort.asc = (col === 'firm' || col === 'firstVintage' || col === 'lastVintage');
+    }
+    renderFirms();
+  })
+);
+
+// Click firm row in Firms table opens modal
+document.getElementById('firms-body').addEventListener('click', (e) => {
+  const tr = e.target.closest('tr.clickable');
+  if (!tr) return;
+  openFirm(tr.dataset.firm);
+});
+
+// Click vintage row → drill into Portfolio filtered to that vintage
+document.getElementById('vintage-body').addEventListener('click', (e) => {
+  const tr = e.target.closest('tr.clickable[data-vintage]');
+  if (!tr) return;
+  const raw = tr.dataset.vintage;
+  const v = raw === 'TBD' ? 'TBD' : Number(raw);
+  state.vintages = [v];
+  showView('portfolio');
+  renderAll();
+});
+
+// Click firm name in Portfolio table opens modal
+document.getElementById('portfolio-body').addEventListener('click', (e) => {
+  const link = e.target.closest('.firm-link');
+  if (!link || !link.dataset.firm) return;
+  e.stopPropagation();
+  openFirm(link.dataset.firm);
+});
+
+// Firm detail modal close
+document.getElementById('fd-close-btn').addEventListener('click', closeFirm);
+document.getElementById('fd-overlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeFirm();
+});
+
+document.getElementById('yr-close-btn').addEventListener('click', closeYear);
+document.getElementById('yr-overlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeYear();
+});
+document.getElementById('yr-entity-select').addEventListener('change', renderYear);
+document.getElementById('yr-kpis').addEventListener('click', (e) => {
+  const kpi = e.target.closest('.fd-kpi[data-scroll]');
+  if (!kpi) return;
+  const target = document.getElementById(kpi.dataset.scroll);
+  if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+// Sort click handlers for the three year-modal tables. Defaults: ascending
+// for text columns, descending for numeric columns.
+const YR_NUMERIC_COLS = new Set(['commitment', 'count', 'amount']);
+[
+  ['yr-commit-table', 'yrCommitSort'],
+  ['yr-dist-table', 'yrDistSort'],
+  ['yr-calls-table', 'yrCallsSort'],
+].forEach(([tableId, sortKey]) => {
+  document.querySelectorAll(`#${tableId} th[data-sort]`).forEach((th) =>
+    th.addEventListener('click', () => {
+      const col = th.dataset.sort;
+      const s = state[sortKey];
+      if (s.col === col) s.asc = !s.asc;
+      else {
+        s.col = col;
+        s.asc = !YR_NUMERIC_COLS.has(col);
+      }
+      renderYear();
+    })
+  );
+});
+document.getElementById('annual-body').addEventListener('click', (e) => {
+  const tr = e.target.closest('tr.clickable[data-year]');
+  if (!tr) return;
+  e.preventDefault();
+  openYear(tr.dataset.year);
+});
+
+// Global firm search wiring
+document.getElementById('gs-input').addEventListener('input', globalFirmSearch);
+document.getElementById('gs-input').addEventListener('focus', globalFirmSearch);
+document.getElementById('gs-drop').addEventListener('click', (e) => {
+  const item = e.target.closest('.gs-item[data-firm]');
+  if (!item) return;
+  globalFirmSelect(item.dataset.firm);
+});
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.global-search')) {
+    document.getElementById('gs-drop').classList.remove('open');
+  }
+});
+document.getElementById('gs-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    const first = document.querySelector('#gs-drop .gs-item[data-firm]');
+    if (first) globalFirmSelect(first.dataset.firm);
+  } else if (e.key === 'Escape') {
+    document.getElementById('gs-drop').classList.remove('open');
+    e.target.blur();
+  }
+});
+
+document.querySelectorAll('#vintage-table th[data-sort]').forEach((th) =>
+  th.addEventListener('click', () => {
+    const col = th.dataset.sort;
+    if (state.vintageSort.col === col) state.vintageSort.asc = !state.vintageSort.asc;
+    else {
+      state.vintageSort.col = col;
+      // Default sort direction: ascending for vintage, descending for everything else
+      state.vintageSort.asc = (col === 'vintage');
+    }
+    renderVintages();
+  })
+);
+
+document.querySelectorAll('#annual-table th[data-sort]').forEach((th) =>
+  th.addEventListener('click', () => {
+    const col = th.dataset.sort;
+    if (state.annualSort.col === col) state.annualSort.asc = !state.annualSort.asc;
+    else {
+      state.annualSort.col = col;
+      state.annualSort.asc = false;
+    }
+    renderAnnual();
+  })
+);
+
+// ── Multi-select wiring ─────────────────────────
+function toggleMsPanel(id) {
+  // Close any other open panels first
+  document.querySelectorAll('.ms-panel.open').forEach((p) => {
+    if (p.id !== id) p.classList.remove('open');
+  });
+  const panel = document.getElementById(id);
+  panel.classList.toggle('open');
+}
+
+document.getElementById('ms-vintage-btn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  toggleMsPanel('ms-vintage-panel');
+});
+document.getElementById('ms-fund-btn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  toggleMsPanel('ms-fund-panel');
+});
+
+// Prevent panel clicks from bubbling to the document-close handler
+['ms-vintage-panel', 'ms-fund-panel'].forEach((id) => {
+  document.getElementById(id).addEventListener('click', (e) => e.stopPropagation());
+});
+
+// Checkbox toggle — event delegation
+document.getElementById('ms-vintage-options').addEventListener('change', (e) => {
+  if (e.target.matches('input[type="checkbox"]')) {
+    const v = e.target.dataset.value;
+    const isActivity = state.view === 'activity';
+    const current = isActivity ? state.annualYears : state.vintages;
+    const set = new Set(current.map(String));
+    if (e.target.checked) set.add(v);
+    else set.delete(v);
+    const next = [...set].map((x) => (x === 'TBD' ? 'TBD' : Number(x)));
+    if (isActivity) state.annualYears = next;
+    else state.vintages = next;
+    renderMsVintage();
+    renderAll();
+  }
+});
+document.getElementById('ms-fund-options').addEventListener('change', (e) => {
+  if (e.target.matches('input[type="checkbox"]')) {
+    const v = e.target.dataset.value;
+    const set = new Set(state.funds);
+    if (e.target.checked) set.add(v);
+    else set.delete(v);
+    state.funds = [...set];
+    renderMsFund();
+    renderAll();
+  }
+});
+
+// Clear buttons
+document.getElementById('ms-vintage-clear').addEventListener('click', () => {
+  if (state.view === 'activity') state.annualYears = [];
+  else state.vintages = [];
+  renderMsVintage();
+  renderAll();
+});
+document.getElementById('ms-fund-clear').addEventListener('click', () => {
+  state.funds = [];
+  msFundSearchText = '';
+  document.getElementById('ms-fund-search').value = '';
+  renderMsFund();
+  renderAll();
+});
+
+// Fund search (inside the popover — narrows the option list, does not filter the table)
+document.getElementById('ms-fund-search').addEventListener('input', (e) => {
+  msFundSearchText = e.target.value;
+  renderMsFund();
+});
+
+// Click outside to close
+document.addEventListener('click', () => {
+  document.querySelectorAll('.ms-panel.open').forEach((p) => p.classList.remove('open'));
+});
+
+// ───────────────────────────────────────────────────────────
+// Boot
+// ───────────────────────────────────────────────────────────
+async function boot() {
+  // Theme + font scale: load saved before data fetch so first paint is right
+  populateThemePicker();
+  populateFontPicker();
+  let savedTheme = null;
+  let savedFontScale = null;
+  try {
+    savedTheme = localStorage.getItem('ff-demo-theme');
+    savedFontScale = localStorage.getItem('ff-demo-font-scale');
+  } catch (e) {}
+  applyTheme(THEMES[savedTheme] ? savedTheme : 'readable', { save: false });
+  applyFontScale(
+    FONT_SCALES.some((s) => s.key === savedFontScale) ? savedFontScale : '100',
+    { save: false }
+  );
+
+  async function fetchDataWithRetry(maxAttempts = 5) {
+    // The server populates its sheet cache async on cold start. If the first
+    // request lands before that finishes, funds can come back empty. Retry
+    // with short backoff so the user never sees a blank dashboard.
+    let lastErr = null;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const res = await fetch('/api/data', { cache: 'no-store' });
+        if (!res.ok) throw new Error(`API error: ${res.status}`);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        if (data.funds && data.funds.length > 0) return data;
+        lastErr = new Error('empty dataset');
+      } catch (e) {
+        lastErr = e;
+      }
+      // Update loading text so user sees something's happening on a cold start
+      const ld = document.getElementById('loading');
+      if (ld) ld.textContent = `Loading fund data… (warming up, attempt ${attempt + 1})`;
+      await new Promise((r) => setTimeout(r, 600 * attempt));
+    }
+    throw lastErr || new Error('Unable to load data');
+  }
+
+  try {
+    const [data, meRes, cfgRes] = await Promise.all([
+      fetchDataWithRetry(),
+      fetch('/api/me').catch(() => null),
+      fetch('/api/config').catch(() => null),
+    ]);
+
+    // Reveal demo banner if the server is running in demo mode.
+    if (cfgRes && cfgRes.ok) {
+      const cfg = await cfgRes.json();
+      if (cfg && cfg.demoMode) {
+        const banner = document.getElementById('demo-banner');
+        if (banner) banner.style.display = 'block';
+      }
+    }
+
+    state.data = data;
+    // Header stats: "v0.1 · N funds · 2 portfolios"
+    const fundCount = uniqueFundCount(data.funds || []);
+    const portfolioCount = new Set((data.funds || []).map((f) => f.entity).filter(Boolean)).size || 2;
+    const statsEl = document.getElementById('header-stats');
+    if (statsEl) {
+      statsEl.textContent = `v0.1 · ${fundCount} funds · ${portfolioCount} portfolios`;
+    }
+    populateFilterOptions();
+
+    if (meRes && meRes.ok) {
+      const me = await meRes.json();
+      if (me && me.email) {
+        const initial = me.email.charAt(0).toUpperCase();
+        document.getElementById('user-info').innerHTML =
+          `<div class="user-chip" title="${escape(me.email)}"><span class="user-avatar">${escape(initial)}</span><a href="/auth/logout">Sign out</a></div>`;
+      }
+    }
+
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('content').classList.remove('hidden');
+    showView(viewFromPath(), false);
+    renderAll();
+    applyModalFromURL();
+  } catch (err) {
+    document.getElementById('loading').classList.add('hidden');
+    const e = document.getElementById('error');
+    e.classList.remove('hidden');
+    e.textContent = 'Error loading data: ' + err.message;
+  }
+}
+
+// Keep --header-h in sync with the sticky page header's actual height so table
+// <thead> cells can stick just below it (they'd otherwise be covered).
+function syncHeaderHeightVar() {
+  const h = document.querySelector('header');
+  if (!h) return;
+  document.documentElement.style.setProperty('--header-h', h.offsetHeight + 'px');
+}
+syncHeaderHeightVar();
+window.addEventListener('resize', syncHeaderHeightVar);
+if (typeof ResizeObserver !== 'undefined') {
+  const hdr = document.querySelector('header');
+  if (hdr) new ResizeObserver(syncHeaderHeightVar).observe(hdr);
+}
+
+boot();
 </script>
 </body>
 </html>

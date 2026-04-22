@@ -1,15 +1,17 @@
 # Family Office Funds Dashboard — Template
 
-A small Node/Express app that reads a Google Sheet of LP fund commitments — capital calls, distributions, NAV — rolls them up per fund, and serves a browser dashboard behind Google sign-in (restricted to your org's email domain). Designed to deploy to Google Cloud Run.
+A Node/Express app that reads a Google Sheet of LP fund commitments — capital calls, distributions, NAV — rolls them up per fund, and serves a browser dashboard behind Google sign-in (restricted to your org's email domain). Designed to deploy to Google Cloud Run.
 
-This is a scaffold — you'll point it at your own sheet, plug in your own OAuth credentials, and customize the UI in `dashboard.html`. For a direct-investment (per-company) version of this template, see the sibling `family-office-dashboard-template`.
+The UI is already built out: tabs for Portfolio / Vintages / Cash Flows / Firms / Activity, fund drill-downs, per-entity filtering, cash-flow waterfall, firm roll-ups, year-by-year activity, feedback form, and a theme/font-size picker. You just configure the environment, point it at your sheet, and deploy. For a direct-investment (per-company) version of this template, see the sibling `family-office-dashboard-template`.
 
 ## What's in the box
 
 | File | Purpose |
 |---|---|
-| `server.js` | Express app: auth, sheet fetching, caching, JSON API |
-| `dashboard.html` | Minimal frontend: KPIs + fund table. Starting point for you to extend. |
+| `server.js` | Express app: auth, sheet fetching, caching, JSON API, SPA routes |
+| `dashboard.html` | Full frontend: all tabs, charts, modals, themes |
+| `demo-data.json` | 46 fabricated funds + 352 synthetic transactions for demo mode |
+| `public/mollie.jpg` | Mollie (feedback success screen). Swap for your own photo or remove. |
 | `package.json` | Node deps |
 | `Dockerfile` | For Cloud Run |
 | `.env.example` | Template for all required env vars |
@@ -25,7 +27,7 @@ npm install
 DEMO_MODE=true npm start
 ```
 
-Open `http://localhost:8080`. No Google setup, no OAuth, no service account — just a working dashboard with 5 fake funds from `demo-data.json`. Good for a sanity check that the app runs before you wire up your own sheet.
+Open `http://localhost:8080`. No Google setup, no OAuth, no service account — the full dashboard runs against `demo-data.json` (46 fabricated funds, 352 synthetic transactions) and a yellow banner indicates you're in demo mode.
 
 ### Connect to your own sheet
 
@@ -83,4 +85,4 @@ See `DEPLOY.md` for a full Cloud Run walkthrough.
 
 ## Customizing the UI
 
-`dashboard.html` is intentionally minimal — one KPI row and one table. Add tabs, charts, filters, vintage/firm breakdowns, cash-flow timelines, etc. as needed. The data contract is whatever `/api/data` returns (see `server.js`). Your Claude can help; see `CLAUDE.md`.
+The out-of-box dashboard has Portfolio, Vintages, Cash Flows, Firms, and Activity views; per-entity filtering; a feedback form; theme + font-size controls; and a labrador named Mollie who rewards you for submitting feedback. Edit `dashboard.html` to swap logos, colors, copy, or metrics. Data contract is whatever `/api/data` returns (see `server.js`). Your Claude can help; see `CLAUDE.md`.

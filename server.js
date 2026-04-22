@@ -397,6 +397,11 @@ const FEEDBACK_SHEET_ID = process.env.FEEDBACK_SHEET_ID;
 app.use(express.json());
 
 app.post('/api/feedback', requireAuth, async (req, res) => {
+  if (DEMO_MODE) {
+    // Discard feedback in demo — no sheet to write to. Return success so the UI flow works.
+    console.log('DEMO feedback (discarded):', JSON.stringify(req.body));
+    return res.json({ success: true });
+  }
   try {
     if (!FEEDBACK_SHEET_ID) return res.status(500).json({ error: 'Feedback sheet not configured' });
     const { name, type, comment, page } = req.body;
@@ -418,6 +423,11 @@ app.post('/api/feedback', requireAuth, async (req, res) => {
 });
 
 app.use('/static', requireAuth, express.static(path.join(__dirname, 'public')));
-app.get('/', requireAuth, (req, res) => res.sendFile(path.join(__dirname, 'dashboard.html')));
+
+// Serve the SPA for every view path — the dashboard routes client-side.
+const VIEW_PATHS = ['/', '/portfolio', '/vintages', '/cashflows', '/firms', '/activity'];
+VIEW_PATHS.forEach((p) => {
+  app.get(p, requireAuth, (req, res) => res.sendFile(path.join(__dirname, 'dashboard.html')));
+});
 
 app.listen(PORT, () => console.log(`Dashboard running on port ${PORT}`));
