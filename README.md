@@ -34,7 +34,7 @@ Open `http://localhost:8080`. No Google setup, no OAuth, no service account — 
 3. `npm start`
 4. Open `http://localhost:8080` — you'll be bounced to Google sign-in, and only email addresses in `ALLOWED_DOMAINS` / `ALLOWED_EMAILS` can get in.
 
-A live demo of this template is available at [family-office-funds-dashboard-demo](https://github.com/crb-kci/family-office-funds-dashboard-demo) (separate repo, full 46-fund dataset, publicly accessible).
+A live demo of this template is available at **https://funds-dashboard-demo-946978801446.us-central1.run.app** (source: [family-office-funds-dashboard-demo](https://github.com/crb-kci/family-office-funds-dashboard-demo), separate repo, 46 fabricated funds).
 
 ## Data model
 
