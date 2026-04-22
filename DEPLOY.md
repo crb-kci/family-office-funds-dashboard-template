@@ -143,6 +143,44 @@ Cloud Run → your service → **Set up continuous deployment** → connect your
 
 ---
 
+## Optional: Wire up the feedback form
+
+The dashboard has a "Send feedback" button in the bottom-right corner of every page. When a user clicks it, they fill out a short form (name, category, comment) and hit submit. The app appends a row to a Google Sheet you control — so you get a running list of bug reports, feature requests, and comments from your users, with no extra infrastructure.
+
+It's completely optional. Leave it off and the feedback button works but silently discards submissions. To turn it on:
+
+### 1. Create a feedback sheet
+- Go to [sheets.google.com](https://sheets.google.com) → create a new blank spreadsheet.
+- Name it whatever you want (e.g. "Dashboard Feedback"). This is a **different** sheet from your portfolio data sheet — keep them separate.
+- Optionally add a header row in Row 1: `Timestamp | Name | Email | Category | Page | Comment`. The app won't add it for you, but it makes the sheet readable. Whether or not you add headers, the app always writes starting at the next empty row.
+
+### 2. Share the sheet with the service account
+- Click **Share** in the top-right.
+- Paste the same service account email you used for your data sheet (looks like `sheets-reader@your-project.iam.gserviceaccount.com`).
+- Give it **Editor** access this time, not Viewer. The app needs to append rows, which requires write access. (Your portfolio data sheet only needs Viewer because the app just reads it.)
+
+### 3. Copy the sheet ID
+- With the sheet open, look at its URL. The ID is the long string between `/d/` and `/edit`. Example: in `https://docs.google.com/spreadsheets/d/1a2B3c4D5e6F7g8H9i0J/edit`, the ID is `1a2B3c4D5e6F7g8H9i0J`.
+
+### 4. Set `FEEDBACK_SHEET_ID` on the deployed service
+```bash
+gcloud run services update funds-dashboard \
+  --region=us-central1 \
+  --update-env-vars="FEEDBACK_SHEET_ID=1a2B3c4D5e6F7g8H9i0J"
+```
+(Or edit the service in the Cloud Run console → **Variables & Secrets** tab.)
+
+### 5. Test it
+- Visit your dashboard, hit the feedback button, submit a test message.
+- Open the sheet — you should see a new row with the timestamp, your name and email (from your Google sign-in), category, page path, and comment.
+
+If nothing shows up, the usual culprits are:
+- Sheet shared with the service account as **Viewer** instead of **Editor** (the most common mistake).
+- Sheet ID typo. Double-check against the URL.
+- You haven't redeployed after adding the env var. `gcloud run services update` above handles it, but if you just edited `.env` locally, that only applies on `npm start`, not on the live Cloud Run service.
+
+---
+
 ## Environment Variables Reference
 
 | Variable | Required | Description |

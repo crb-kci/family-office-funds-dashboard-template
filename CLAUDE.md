@@ -67,6 +67,14 @@ Common issues:
 
 Build incrementally — one view at a time, ship each before starting the next. All data comes from `/api/data`.
 
+### Phase 6.5 — (Optional) Wire up the feedback form
+The dashboard has a built-in feedback button (bottom-right of every page). By default it no-ops silently. If the user wants to collect feedback in a Google Sheet:
+1. Have them create a **separate** Google Sheet (not their data sheet). Any name.
+2. Share it with the same service account email from Phase 3, but with **Editor** access (not Viewer) — the app appends rows.
+3. Copy the sheet ID from the URL and set `FEEDBACK_SHEET_ID`.
+4. App writes to `Sheet1!A:F`: timestamp, name, user email, category, page path, comment. An optional header row in row 1 is nice but not required.
+Walk them through DEPLOY.md's "Optional: Wire up the feedback form" section for the details.
+
 ### Phase 7 — Deploy to Cloud Run
 Follow `DEPLOY.md` Steps 5–8. Key things to get right:
 - Paste the full service account JSON as the `GOOGLE_SERVICE_ACCOUNT_KEY` env var value (single line, wrapped in single quotes in the shell). Don't use `GOOGLE_APPLICATION_CREDENTIALS` in Cloud Run — there's no filesystem path to point to.
