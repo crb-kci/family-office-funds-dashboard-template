@@ -42,10 +42,10 @@ The app expects two tabs in your Google Sheet (names configurable via env vars).
 
 ### `Funds` tab (default name)
 
-One row per fund. If you hold funds through multiple legal vehicles (a trust, a foundation, an LLC), use one row per fund × entity; otherwise leave `Entity` blank.
+One row per fund. If you hold funds through multiple legal vehicles — a family office and a foundation, two different trusts, an LLC and a DAF, etc. — use one row per fund × entity and the dashboard will let you filter/view per vehicle. If you only invest through one entity, leave the `Entity` column blank.
 
 - `Fund Name` — name of the fund
-- `Entity` — optional; which of your vehicles holds this commitment
+- `Entity` — optional; which of your vehicles holds this commitment (free-text label — use whatever names you use internally, e.g. "Family Trust", "Foundation", "Main LLC")
 - `Vintage` — vintage year
 - `Commitment` — total capital committed, positive
 - `Called` — capital called to date (the app normalizes negatives)
