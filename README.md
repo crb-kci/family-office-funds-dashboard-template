@@ -33,18 +33,17 @@ Nothing to buy. You'll need:
 
 ## How to get started
 
-Don't try to set this up by reading code. Instead, let Claude Code walk you through it:
+You don't need to read the code, clone anything manually, or follow a long written guide. Just let Claude Code do it with you.
 
-1. **Clone or download this repository** to your computer (or fork it on GitHub).
-2. **Open it in Claude Code.** (If you don't have Claude Code yet: claude.ai/code)
-3. **Paste this into Claude Code as your first message:**
+1. **Open Claude Code.** (If you don't have it yet: [claude.ai/code](https://claude.ai/code).)
+2. **Paste this as your first message:**
 
-   > I want to use this template to build a dashboard for my venture fund LP commitments. First, before we start, walk me through the data security model so I understand exactly where my data will live and who can see it. Then, follow the step-by-step setup instructions in CLAUDE.md one phase at a time — wait for me to confirm each step before moving on.
+   > I want to build a dashboard to track my venture fund LP investments. Please go to this repository — `https://github.com/crb-kci/family-office-funds-dashboard-template` — clone it, read the CLAUDE.md setup instructions inside, and then guide me through the entire setup one step at a time. Before we start, walk me through the data security model so I understand where my data will live and who can see it. Wait for me to confirm each step before moving on.
 
-4. **Have your Google Sheet handy** (or create one from scratch — Claude will tell you what columns it needs).
-5. **Go at your own pace.** You can stop and come back; Claude picks up where you left off.
+3. **Have your Google Sheet handy** (or let Claude create a starter template with the right columns).
+4. **Go at your own pace.** Claude picks up where you left off if you stop and come back.
 
-There's a file in this repo called `CLAUDE.md` that contains detailed instructions Claude Code reads automatically. You don't need to read it yourself.
+That's it. Claude Code handles the cloning, the Google Cloud setup, adapting the app to your sheet's actual columns, and the deployment. You'll click through a few Google Cloud screens and paste some values back — Claude handles the rest.
 
 ## FAQ
 
