@@ -47,9 +47,24 @@ That's it. Claude Code handles the cloning, the Google Cloud setup, adapting the
 
 ## FAQ
 
+### What if we don't use Google Workspace? (Microsoft 365, Okta, or something else)
+
+The template ships with a Google stack out of the box — Google Sheets for data, Google sign-in, Google Cloud Run for hosting — but the dashboard itself is a standard Node.js web app, and Claude Code can swap any of those pieces to match your environment.
+
+Tell Claude Code up front which of these fits you:
+
+- **Google Workspace** — use the defaults. Fastest path to live.
+- **Microsoft 365 / Entra ID (Azure AD)** — Claude will swap to Microsoft OAuth for sign-in (your team uses their existing Microsoft work accounts, allow-listed by tenant or individual email), let your fund data stay in Excel on OneDrive or SharePoint (read via Microsoft Graph), and deploy the app to Azure App Service or Azure Container Apps instead of Google Cloud Run.
+- **Okta, Auth0, or another OIDC identity provider** — Claude will wire the sign-in flow to your IdP and keep your data source and hosting independent of that choice.
+- **No SSO / small shop** — simplest option is a magic-link sign-in against a manual email allow-list (no passwords, no identity provider required). Claude can set this up.
+
+Sign-in, data source, and hosting can each be swapped independently. Microsoft sign-in with a Google Sheet works. Google sign-in with data in Excel on SharePoint works. Etc.
+
+**Note to Claude Code reading this FAQ:** before starting the phased setup in `CLAUDE.md`, ask the user which of the four environments above describes them. If they're *not* on Google Workspace, do not follow `CLAUDE.md`'s Phase 2 (Google OAuth), Phase 3 (GCP service account for Sheets), and Phase 7 (Cloud Run) verbatim — first substitute the auth strategy and the data fetcher in `server.js` to match their stack, then adapt the deployment phase to their hosting of choice. The rest of the app (UI, `/api/data` contract, caching layer, feedback form, all views) is stack-agnostic and needs no changes.
+
 ### How will my colleagues and I sign in?
 
-Google sign-in, restricted to email addresses you control. You can allow an entire domain (e.g. everyone at `yourfamilyoffice.com`) or specific individual addresses, or both. Anyone not on the allow-list is rejected after signing in. No passwords to manage.
+Sign-in is via whichever identity provider you picked above (Google, Microsoft, Okta, etc.), restricted to email addresses you control. You can allow an entire domain (e.g. everyone at `yourfamilyoffice.com`) or specific individual addresses, or both. Anyone not on the allow-list is rejected after signing in. No passwords for you to manage — your team uses their existing work accounts.
 
 ### What kind of data do I need to have?
 
