@@ -123,11 +123,4 @@ Yes — see the sibling template: [family-office-dashboard-template](https://git
 
 Under the hood: Node.js + Express, reads Google Sheets via a service account, Google OAuth for sign-in, deploys to Google Cloud Run as a Docker container, no database (in-memory caching only). Full deployment steps are in [DEPLOY.md](DEPLOY.md). The step-by-step setup Claude follows lives in [CLAUDE.md](CLAUDE.md).
 
-### Want to see it immediately before setting anything up?
-
-```bash
-npm install
-DEMO_MODE=true npm start
-```
-
-Open `http://localhost:8080` and you'll see the full dashboard running against fabricated demo data — no Google setup needed.
+Want to see the dashboard in action before you set anything up? Visit the [live demo](https://funds-dashboard-demo-946978801446.us-central1.run.app) — no install required.
